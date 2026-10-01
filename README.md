@@ -1,51 +1,51 @@
 # RetroPower
 
-Module de contrôle d'alimentation pour consoles rétro, piloté par Home Assistant via un ESP32-C3 — PCB 2 couches (KiCad), relais pour l'allumage/extinction à distance (émulation du bouton power).
+Home Assistant-controlled power module for retro consoles, built around an ESP32-C3 — 2-layer PCB (KiCad), with a relay that emulates the console's power button for remote on/off.
 
-## Deux versions de PCB
+## Two PCB versions
 
-### `hardware/integrated/` — version intégrée (recommandée)
-Le module ESP32-C3-Zero (Waveshare, 18 broches castellées) est **soudé directement au dos du PCB** — pas de fils volants. L'antenne se retrouve sur le bord extérieur de la carte, totalement dégagé de tout cuivre/métal sur les deux faces, pour la meilleure réception WiFi/Bluetooth possible.
+### `hardware/integrated/` — integrated version (recommended)
+The ESP32-C3-Zero module (Waveshare, 18 castellated pins) is **soldered directly to the back of the PCB** — no flying wires. The antenna ends up on the outer edge of the board, completely clear of any copper/metal on both sides, for the best possible WiFi/Bluetooth reception.
 
-- Dimensions : 53.335 x 32.75 mm
-- DRC officiel KiCad : 0 erreur / 0 avertissement (v4)
-- Voir `LISEZMOI.txt` dans ce dossier pour l'historique des correctifs et la procédure de vérification de l'écartement des broches avant soudure définitive.
+- Dimensions: 53.335 x 32.75 mm
+- Official KiCad DRC: 0 errors / 0 warnings (v4)
+- See `README.md` in this folder for the changelog and the pin-spacing verification procedure to run before soldering the module for good.
 
-### `hardware/compact/` — version compacte (de secours)
-Le module ESP32-C3-Zero est relié par fils volants (pas soudé directement sur le PCB). Insensible aux variations de cotes entre modules, utile en secours si la version intégrée pose un souci de compatibilité physique.
+### `hardware/compact/` — compact version (fallback)
+The ESP32-C3-Zero module is connected via flying wires (not soldered directly onto the PCB). Immune to dimensional variation between modules — useful as a fallback if the integrated version ever runs into a physical compatibility issue.
 
-- Dimensions : 40.45 x 32.75 mm
-- DRC officiel KiCad : 0 erreur / 0 avertissement (v11)
-- Voir `LISEZMOI.txt` et `BRANCHEMENTS.txt` dans ce dossier.
+- Dimensions: 40.45 x 32.75 mm
+- Official KiCad DRC: 0 errors / 0 warnings (v11)
+- See `README.md` and `WIRING.md` in this folder.
 
-Chaque dossier contient : le fichier `.kicad_pcb`/`.kicad_pro`, les gerbers (dossier + zip), le fichier de position des composants (`_pos.csv`), la BOM (`BOM.csv`), un rendu visuel du routage et le fichier `LISEZMOI.txt` expliquant les choix de conception.
+Each folder contains: the `.kicad_pcb`/`.kicad_pro` files, the gerbers (folder + zip), the component position file (`_pos.csv`), the BOM (`BOM.csv`), a rendered image of the routed board, and a `README.md` explaining the design choices.
 
 ## Firmware
 
-`firmware/retropower_template.yaml` — template ESPHome générique, à dupliquer pour chaque console (changer `device_name` / `friendly_name`). Brochage utilisé :
+`firmware/retropower_template.yaml` — generic ESPHome template, to be duplicated for each console (change `device_name` / `friendly_name`). Pinout used:
 
-- GPIO0 — `POWER_SENSE` (lecture du rail 3V3 de la console)
-- GPIO3 — `RELAY_SET` (impulsion → allume, via Q1)
-- GPIO10 — `RELAY_RESET` (impulsion → éteint, via Q2)
+- GPIO0 — `POWER_SENSE` (reads the console's 3V3 rail)
+- GPIO3 — `RELAY_SET` (pulse → turns on, via Q1)
+- GPIO10 — `RELAY_RESET` (pulse → turns off, via Q2)
 
-## Scripts de génération (KiCad / Python)
+## Generation scripts (KiCad / Python)
 
-`scripts/` contient les scripts Python (API `pcbnew`) utilisés pour générer et router chaque carte, ainsi que les scripts de vérification (clearance, trous, connectivité, bord de carte, sérigraphie, chevauchement de composants) utilisés en complément du DRC officiel de KiCad.
+`scripts/` contains the Python scripts (using the `pcbnew` API) used to generate and route each board, plus the verification scripts (clearance, holes, connectivity, board-edge clearance, silkscreen, component-body overlap) used alongside KiCad's official DRC.
 
-- `scripts/integrated/` : `build_integrated.py` (placement + footprints), `route_integrated.py` (routage initial), `fix_net_integrated.py` (correctifs de routage ciblés)
-- `scripts/compact/` : `build_compact_v3.py`, `route_grid_compact5.py`
-- `scripts/checks/` : scripts de vérification communs aux deux versions
+- `scripts/integrated/`: `build_integrated.py` (placement + footprints), `route_integrated.py` (initial routing), `fix_net_integrated.py` (targeted routing fixes)
+- `scripts/compact/`: `build_compact_v3.py`, `route_grid_compact5.py`
+- `scripts/checks/`: verification scripts shared by both versions
 
-Nécessite KiCad 7 (API `pcbnew` headless) et Python 3.
+Requires KiCad 7 (headless `pcbnew` API) and Python 3.
 
-## Principe de fonctionnement
+## How it works
 
-Le module émule l'appui sur le bouton power de la console via deux impulsions distinctes (SET/RESET) pilotées par deux MOSFET (Q1/Q2) qui commandent les deux bobines d'un relais bistable (K1) — le relais reste dans l'état choisi sans consommation continue. Un pont de sense (`POWER_SENSE`) permet à l'ESP32 de lire l'état réel d'allumage de la console pour Home Assistant.
+The module emulates pressing the console's power button through two separate pulses (SET/RESET) driven by two MOSFETs (Q1/Q2) that control the two coils of a bistable relay (K1) — the relay stays in the chosen state with no continuous power draw. A sense tap (`POWER_SENSE`) lets the ESP32 read the console's actual power state for Home Assistant.
 
-## Alimentation
+## Power supply
 
-Le buck converter (12V/8V brut de la console → 3.3V régulé) est **externe**, non intégré au PCB. Voir les fichiers `LISEZMOI.txt`/`BRANCHEMENTS.txt` de chaque version pour le câblage exact (`J2` = entrée 3.3V régulé, `J3` = tap brut + protection anti-inversion).
+The buck converter (console's raw 12V/8V → regulated 3.3V) is **external**, not integrated onto the PCB. See each version's `README.md`/`WIRING.md` for the exact wiring (`J2` = regulated 3.3V input, `J3` = raw tap + reverse-polarity protection).
 
-## Avertissement
+## Disclaimer
 
-Ces fichiers sont fournis tels quels, sans garantie. Toujours vérifier le DRC officiel de KiCad avant de commander un lot de PCB, et tester le rail 3.3V au multimètre avant de souder un module ESP32 définitivement.
+These files are provided as-is, with no warranty. Always re-run KiCad's official DRC before ordering a batch of PCBs, and check the 3V3 rail with a multimeter before soldering an ESP32 module in for good.

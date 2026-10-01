@@ -1,19 +1,19 @@
 Reference,Value,Footprint,Description
-K1,HFD2/003-M-L2-D,Package_DIP.pretty:DIP-16_W7.62mm,Relais bistable 2xRT (10 broches reelles sur grille DIP-16 -- brochage confirme par datasheet Hongfa)
-Q1,AO3400A,Package_TO_SOT_SMD:SOT-23,MOSFET N canal (drive coil SET)
-Q2,AO3400A,Package_TO_SOT_SMD:SOT-23,MOSFET N canal (drive coil RESET)
-D1,1N4148WS (SOD-123),Diode_SMD:D_SOD-123,Diode roue libre coil SET
-D2,1N4148WS (SOD-123),Diode_SMD:D_SOD-123,Diode roue libre coil RESET -- decalee vers le bas pour degager une vraie marge avec le corps de K1 (chevauchement reel trouve par le DRC officiel)
-D3,1N5819WS (SOD-123),Diode_SMD:D_SOD-123,Diode anti-inversion de polarite sur RAW_IN (anode=RAW_IN, cathode=GND -- CORRIGEE, elle etait par erreur cablee vers 3V3) -- sur la meme ligne que D1/R1, a droite de J3
-R1,100R,Resistor_SMD:R_0805_2012Metric,Resistance serie grille Q1 -- valeur reelle validee SNES -- alignee sur la meme ligne que D1
-R2,100R,Resistor_SMD:R_0805_2012Metric,Resistance serie grille Q2 -- valeur reelle validee SNES
-R3,10k,Resistor_SMD:R_0805_2012Metric,Pulldown grille Q1 -- valeur reelle validee SNES
-R4,10k,Resistor_SMD:R_0805_2012Metric,Pulldown grille Q2 -- valeur reelle validee SNES
-C1,100uF/16V (CMS uniquement),Capacitor_SMD:CP_Elec_6.3x5.4,CMS uniquement -- broche 1 de J1 alignee sur broche 1 de K1, C1 suit
-C2,100nF,Capacitor_SMD:C_0805_2012Metric,Decouplage HF 3V3 (garde -- deja present et valide sur le montage SNES)
-J1,ESP32 (fils volants) -- 5 broches,Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical,3V3 / GND / SENSE(GPIO0) / SET(GPIO3) / RESET(GPIO10) -- broche 1 alignee sur broche 1 de K1
-J2,Buck 3V3 OUT (2 broches),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,3V3 / GND -- sous C1
-J3,Tap alim brute vers buck (2 broches),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,RAW_IN / GND -- en haut, au-dessus de J1, parallele a J2
-J4,Switch console pole 1 (3 broches),Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,SW_COM / SW_NC / SW_NO
-J5,Pole 2 relais -- libre/reserve (3 broches),Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,SW2_COM / SW2_NC / SW2_NO
-J6,POWER_SENSE tap console -- deja a 3.3V (2 broches),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,SENSE / GND -- branche directement, pas de pont diviseur
+K1,HFD2/003-M-L2-D,Package_DIP.pretty:DIP-16_W7.62mm,Bistable 2xRT relay (10 real pins on a DIP-16 grid -- pinout confirmed from the Hongfa datasheet)
+Q1,AO3400A,Package_TO_SOT_SMD:SOT-23,N-channel MOSFET (drives coil SET)
+Q2,AO3400A,Package_TO_SOT_SMD:SOT-23,N-channel MOSFET (drives coil RESET)
+D1,1N4148WS (SOD-123),Diode_SMD:D_SOD-123,Flyback diode for coil SET
+D2,1N4148WS (SOD-123),Diode_SMD:D_SOD-123,Flyback diode for coil RESET -- offset downward to create a real margin from K1's body (actual overlap found by the official DRC)
+D3,1N5819WS (SOD-123),Diode_SMD:D_SOD-123,Reverse-polarity protection diode on RAW_IN (anode=RAW_IN, cathode=GND -- FIXED, it was mistakenly wired to 3V3) -- on the same line as D1/R1, to the right of J3
+R1,100R,Resistor_SMD:R_0805_2012Metric,Series gate resistor for Q1 -- real value validated on the SNES -- aligned on the same line as D1
+R2,100R,Resistor_SMD:R_0805_2012Metric,Series gate resistor for Q2 -- real value validated on the SNES
+R3,10k,Resistor_SMD:R_0805_2012Metric,Gate pulldown for Q1 -- real value validated on the SNES
+R4,10k,Resistor_SMD:R_0805_2012Metric,Gate pulldown for Q2 -- real value validated on the SNES
+C1,100uF/16V (SMD only),Capacitor_SMD:CP_Elec_6.3x5.4,SMD only -- J1 pin 1 aligned with K1 pin 1, C1 follows
+C2,100nF,Capacitor_SMD:C_0805_2012Metric,HF decoupling on 3V3 (kept -- already present and validated on the SNES setup)
+J1,ESP32 (flying wires) -- 5 pins,Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical,3V3 / GND / SENSE(GPIO0) / SET(GPIO3) / RESET(GPIO10) -- pin 1 aligned with K1 pin 1
+J2,Buck 3V3 OUT (2 pins),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,3V3 / GND -- under C1
+J3,Raw power tap to buck (2 pins),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,RAW_IN / GND -- at the top, above J1, parallel to J2
+J4,Console switch pole 1 (3 pins),Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,SW_COM / SW_NC / SW_NO
+J5,Relay pole 2 -- free/reserved (3 pins),Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,SW2_COM / SW2_NC / SW2_NO
+J6,Console POWER_SENSE tap -- already at 3.3V (2 pins),Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,SENSE / GND -- wired directly, no voltage divider
