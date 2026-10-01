@@ -42,7 +42,9 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 **Off the PCB (external, per console):**
 
 - A buck converter module (raw 12V/8V → regulated 3.3V) — any small off-the-shelf buck board rated for the console's raw voltage works; test it unloaded before wiring it in.
-- Hookup wire (0.5mm²/20-21AWG is plenty for these currents) between J3/console-raw-tap and the buck's input, and between the buck's output and J2.
+- Hookup wire:
+  - **Power lines** (raw 12V/8V to/from the buck, regulated 3V3 to J2): 0.5mm²/20-21AWG is plenty for these currents.
+  - **Signal/GPIO lines** (console switch tap to J4/J5, POWER_SENSE tap to J6): thinner wire is fine here, e.g. 30AWG — negligible current, easier to route inside the console's case.
 
 ## Firmware
 
