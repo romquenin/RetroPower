@@ -1,0 +1,105 @@
+========================================================================
+   RetroPower -- Recapitulatif des branchements (J1, J2, J3, J4, J6)
+========================================================================
+Carte : RetroPower_Compact (version compacte, 40.45 x 32.75mm)
+Connecteurs : barrettes males/femelles au pas 2.54mm (fils volants)
+
+
+------------------------------------------------------------------------
+  COMMENT REPERER LA BROCHE 1 SUR CHAQUE CONNECTEUR
+------------------------------------------------------------------------
+Sur tous les connecteurs de cette carte, la broche 1 se reconnait de
+DEUX facons, visibles a l'oeil nu sur le PCB :
+
+  1. La PASTILLE DE CUIVRE de la broche 1 est CARREE (un "carre plein").
+     Toutes les autres broches du meme connecteur ont une pastille
+     RONDE. C'est le repere le plus fiable -- il reste visible meme
+     apres soudure.
+
+  2. Le contour serigraphie (le dessin blanc/jaune autour du
+     connecteur) a un PETIT COIN COUPE (chanfrein) du cote de la
+     broche 1. C'est le repere classique utilise sur la plupart des
+     circuits imprimes.
+
+C'est exactement ce que tu as repere sur J6 et J4 : le carre = broche 1,
+le petit angle trace sur le contour = meme reperage, cote broche 1.
+
+
+------------------------------------------------------------------------
+  J1 -- Vers le module ESP32 (fils volants), 5 broches
+------------------------------------------------------------------------
+  Broche 1 (carre) : 3V3          -> alimentation 3.3V vers l'ESP32
+  Broche 2          : GND          -> masse commune
+  Broche 3          : SENSE_MID    -> GPIO0 de l'ESP32 (lecture POWER_SENSE)
+  Broche 4          : SET_CTRL     -> GPIO3 de l'ESP32 (commande SET du relais)
+  Broche 5          : RESET_CTRL   -> GPIO10 de l'ESP32 (commande RESET du relais)
+
+  Orientation sur la carte : connecteur vertical, broches alignees du
+  haut (broche 1) vers le bas (broche 5), sur le bord gauche de la
+  carte, a cote du relais K1.
+
+
+------------------------------------------------------------------------
+  J2 -- Sortie du buck converter (3.3V regule), 2 broches
+------------------------------------------------------------------------
+  Broche 1 (carre) : 3V3   -> sortie 3.3V du buck, vers le PCB
+  Broche 2          : GND   -> masse commune
+
+  Orientation sur la carte : connecteur couche a l'horizontale, sous le
+  condensateur C1 (bas de la carte). Broche 1 a gauche, broche 2 a
+  droite.
+
+
+------------------------------------------------------------------------
+  J3 -- Tap d'alimentation brute (vers l'entree du buck), 2 broches
+------------------------------------------------------------------------
+  Broche 1 (carre) : RAW_IN -> 12V brut tape sur la console, VERS
+                               l'entree du buck (protege par la diode D3)
+  Broche 2          : GND    -> masse commune
+
+  Orientation sur la carte : connecteur couche a l'horizontale, en haut
+  de la carte, au-dessus de J1. Broche 1 a gauche, broche 2 a droite.
+
+
+------------------------------------------------------------------------
+  J4 -- Interrupteur d'origine de la console (pole 1 du relais), 3 broches
+------------------------------------------------------------------------
+  Broche 1 (carre) : SW_COM  -> point commun de l'interrupteur d'origine
+  Broche 2          : SW_NC   -> contact normalement ferme (NC)
+  Broche 3          : SW_NO   -> contact normalement ouvert (NO)
+
+  Orientation sur la carte : connecteur vertical, sur le bord droit de
+  la carte. Broche 1 en haut, broche 3 en bas.
+
+  Rappel (fiche Hongfa confirmee) : pole 1 du relais K1 = COM broche 4,
+  NC broche 6, NO broche 8.
+
+
+------------------------------------------------------------------------
+  J6 -- Tap POWER_SENSE de la console (deja a 3.3V), 2 broches
+------------------------------------------------------------------------
+  Broche 1 (carre) : SENSE_MID -> meme signal que GPIO0/J1.3 (branche
+                                  directement au rail interne 3.3V de la
+                                  console, SANS pont diviseur -- deja
+                                  valide sur ta SNES)
+  Broche 2          : GND       -> masse commune
+
+  Orientation sur la carte : connecteur vertical, sur le bord droit de
+  la carte, sous J4. Broche 1 en haut, broche 2 en bas.
+
+
+------------------------------------------------------------------------
+  RESUME RAPIDE (vue d'ensemble)
+------------------------------------------------------------------------
+  J1 (5 br.) : 3V3 - GND - SENSE_MID - SET_CTRL - RESET_CTRL
+  J2 (2 br.) : 3V3 - GND
+  J3 (2 br.) : RAW_IN - GND
+  J4 (3 br.) : SW_COM - SW_NC - SW_NO
+  J6 (2 br.) : SENSE_MID - GND
+
+  Note : J1.3 et J6.1 portent le MEME signal electrique (SENSE_MID) --
+  c'est normal, ce sont deux points d'acces différents au meme fil.
+
+  (J5, non demande ici, est le pole 2 du relais -- libre/reserve, memes
+  broches que J4 mais sur SW2_COM/SW2_NC/SW2_NO.)
+========================================================================

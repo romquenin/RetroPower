@@ -1,0 +1,24 @@
+### Footprint positions - created on Tue Sep 29 21:21:05 2026 ###
+### Printed by KiCad version 7.0.11+dfsg-1build4
+## Unit = mm, Angle = deg.
+## Side : All
+# Ref     Val                                      Package                               PosX       PosY       Rot  Side
+C1        100uF/16V_(CMS)                          CP_Elec_6.3x5.4                    19.2100   -23.3750    0.0000  top
+C2        100nF                                    C_0805_2012Metric                  28.0100   -27.9750    0.0000  top
+D1        1N4148WS_(SOD-123)                       D_SOD-123                          42.0100    -3.9750    0.0000  top
+D2        1N4148WS_(SOD-123)                       D_SOD-123                          36.0100   -28.4750    0.0000  top
+D3        1N5819WS_(SOD-123)                       D_SOD-123                          36.9700    -3.9750    0.0000  top
+J2        Buck_3V3_OUT                             PinHeader_1x02_P2.54mm_Vertical    18.0100   -29.3750   90.0000  top
+J3        Tap_alim_brute_(vers_buck)               PinHeader_1x02_P2.54mm_Vertical    29.9400    -3.3250   90.0000  top
+J4        Switch_console_(pole_1)                  PinHeader_1x03_P2.54mm_Vertical    50.0100    -7.9750    0.0000  top
+J5        Pole_2_relais_(libre/reserve)            PinHeader_1x03_P2.54mm_Vertical    50.0100   -16.9750    0.0000  top
+J6        POWER_SENSE_tap_console_(deja_3.3V)      PinHeader_1x02_P2.54mm_Vertical    50.0100   -25.9750    0.0000  top
+K1        HFD2/003-M-L2-D                          DIP-16_W7.62mm                     26.0100    -6.9750    0.0000  top
+Q1        AO3400A                                  SOT-23                             38.0100    -8.9750   90.0000  top
+Q2        AO3400A                                  SOT-23                             38.0100   -20.9750   90.0000  top
+R1        100R                                     R_0805_2012Metric                  49.0100    -3.9750   90.0000  top
+R2        100R                                     R_0805_2012Metric                  43.0100   -17.9750   90.0000  top
+R3        10k                                      R_0805_2012Metric                  43.0100   -11.9750   90.0000  top
+R4        10k                                      R_0805_2012Metric                  43.0100   -26.9750   90.0000  top
+U1        ESP32-C3-Zero_(Waveshare,_18br._2.54mm)                                      0.0000     0.0000    0.0000  top
+## End

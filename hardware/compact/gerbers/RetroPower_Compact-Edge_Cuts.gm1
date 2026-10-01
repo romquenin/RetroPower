@@ -1,0 +1,26 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,7.0.11+dfsg-1build4*%
+%TF.CreationDate,2026-09-29T18:52:29+02:00*%
+%TF.ProjectId,RetroPower_Compact,52657472-6f50-46f7-9765-725f436f6d70,rev?*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Profile,NP*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+G04 Created by KiCad (PCBNEW 7.0.11+dfsg-1build4) date 2026-09-29 18:52:29*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+%TA.AperFunction,Profile*%
+%ADD10C,0.150000*%
+%TD*%
+G04 APERTURE END LIST*
+D10*
+X40450000Y-32750000D02*
+X0Y-32750000D01*
+X0Y-32750000D02*
+X0Y0D01*
+X40450000Y0D02*
+X40450000Y-32750000D01*
+X0Y0D02*
+X40450000Y0D01*
+M02*
