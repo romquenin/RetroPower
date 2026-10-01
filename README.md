@@ -20,6 +20,30 @@ The ESP32-C3-Zero module is connected via flying wires (not soldered directly on
 
 Each folder contains: the `.kicad_pcb`/`.kicad_pro` files, the gerbers (folder + zip), the component position file (`_pos.csv`), the BOM (`BOM.csv`), a rendered image of the routed board, and a `README.md` explaining the design choices.
 
+## Bill of materials
+
+Full per-reference BOM (with placement notes) is in each version's own `BOM.csv` (`hardware/integrated/BOM.csv` / `hardware/compact/BOM.csv`). Same components and values on both versions, except J1 (compact version only, header for the flying wires to the ESP32) and the ESP32 module itself (soldered directly on the integrated version, wired via J1 on the compact one).
+
+**On the PCB:**
+
+| Ref | Part | Package | Notes |
+|---|---|---|---|
+| U1 | ESP32-C3-Zero (Waveshare) | 18-pin castellated module, 2.54mm pitch | Integrated version only — soldered to the back of the PCB |
+| K1 | HFD2/003-M-L2-D (Hongfa) | DIP-16 (10 real pins) | Bistable 2xRT relay |
+| Q1, Q2 | AO3400A | SOT-23 | N-channel MOSFET |
+| D1, D2 | 1N4148WS | SOD-123 | Flyback diodes (relay coils) |
+| D3 | 1N5819WS | SOD-123 | Reverse-polarity protection on RAW_IN |
+| R1, R2 | 100R | 0805, 1/4W 5% | Series gate resistors |
+| R3, R4 | 10k | 0805, 1/4W 5% | Gate pulldowns |
+| C1 | 100µF / 16V | SMD electrolytic, 6.3x5.4mm | — |
+| C2 | 100nF | 0805 ceramic | HF decoupling on 3V3 |
+| J1–J6 | 2.54mm pin headers | 2 to 5 pins, vertical | See each version's wiring notes |
+
+**Off the PCB (external, per console):**
+
+- A buck converter module (raw 12V/8V → regulated 3.3V) — any small off-the-shelf buck board rated for the console's raw voltage works; test it unloaded before wiring it in.
+- Hookup wire (0.5mm²/20-21AWG is plenty for these currents) between J3/console-raw-tap and the buck's input, and between the buck's output and J2.
+
 ## Firmware
 
 `firmware/retropower_template.yaml` — generic ESPHome template, to be duplicated for each console (change `device_name` / `friendly_name`). Pinout used:
