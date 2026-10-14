@@ -112,7 +112,8 @@ connect(Q2, 3, "COIL_RESET_B")
 connect(Q2, 1, "Q2_GATE")
 
 # D1/D2 - 1N4148WS (SOD-123, equivalent CMS du 1N4148 THT)
-# pad1 = Anode, pad2 = Cathode (verifie sur le symbole F.Fab de l'empreinte)
+# NOTE: in KiCad D_SOD-123, pad1 = CATHODE (K), pad2 = ANODE (A).
+# D1/D2 (cathode on 3V3) therefore must be mounted rotated 180° vs the silkscreen.
 # (CMS uniquement -- pas de double empreinte traversante : ca faisait
 # grossir la carte pour rien, tu commandes des diodes CMS)
 D1 = load_fp("Diode_SMD.pretty", "D_SOD-123")

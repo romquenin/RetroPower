@@ -1,11 +1,12 @@
 # =============================================================
-# RetroPower — Template ESPHome générique
-# À dupliquer pour chaque console : changer device_name / friendly_name
+# RetroPower - generic ESPHome template (validated on a SNES)
+# Duplicate for each console: change device_name, friendly_name
+# and the static IP (one unique IP per console).
 # =============================================================
 
 substitutions:
-  device_name: "retropower-snes"        # ex: retropower-snes, retropower-gamecube...
-  friendly_name: "SNES Power"           # nom affiché dans Home Assistant
+  device_name: "retropower-snes"   # e.g. retropower-snes, retropower-gamecube...
+  friendly_name: "SNES Power"      # name shown in Home Assistant
 
 esphome:
   name: ${device_name}
@@ -14,35 +15,27 @@ esphome:
 esp32:
   board: esp32-c3-devkitm-1
   framework:
-    type: arduino
+    type: esp-idf
 
-# --- Connectivité ---
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-
-  # Point d'accès de secours si le Wi-Fi ne répond pas
-  ap:
-    ssid: "${friendly_name} Fallback"
-    password: !secret fallback_password
+  fast_connect: true
+  manual_ip:
+    static_ip: 192.168.2.230   # adjust to your network, unique per console
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
 
 api:
-  encryption:
-    key: !secret api_key
 
 ota:
   - platform: esphome
-    password: !secret ota_password
 
 logger:
 
-# =============================================================
-# Matériel RetroPower
-# GPIO0  = POWER_SENSE  (lecture du rail 3V3 de la console)
-# GPIO3  = RELAY_SET    (impulsion -> allume, via Q1)
-# GPIO10 = RELAY_RESET  (impulsion -> éteint, via Q2)
-# =============================================================
-
+# GPIO0  = POWER_SENSE (console 3V3 rail, high = on)
+# GPIO3  = RELAY_SET   (pulse -> on, via Q1)
+# GPIO10 = RELAY_RESET (pulse -> off, via Q2)
 output:
   - platform: gpio
     pin: GPIO3
@@ -54,33 +47,28 @@ output:
 binary_sensor:
   - platform: gpio
     id: power_sense
-    name: "${friendly_name} - Console allumée (capteur)"
+    name: "${friendly_name} - Console on (sensor)"
     pin:
       number: GPIO0
       mode: INPUT
-      # Pas de pull interne : la ligne est pilotée activement
-      # par le rail 3V3 de la console (haut = allumée, bas = éteinte)
     filters:
-      - delayed_on_off: 50ms   # anti-rebond / anti-parasite
+      - delayed_on_off: 50ms
 
-# Impulsions courtes (30ms) sur les bobines SET / RESET du relais
-# bistable, cohérent avec le courant bobine (~65mA, <25ms mini)
+# 30 ms pulses on the bistable relay coils
 script:
   - id: pulse_set
     then:
       - output.turn_on: relay_set_pin
       - delay: 30ms
       - output.turn_off: relay_set_pin
-
   - id: pulse_reset
     then:
       - output.turn_on: relay_reset_pin
       - delay: 30ms
       - output.turn_off: relay_reset_pin
 
-# Interrupteur exposé à Home Assistant.
-# Son état reflète toujours la réalité (via POWER_SENSE),
-# même si on allume/éteint la console avec le bouton physique.
+# State always reflects reality (POWER_SENSE), even when the
+# console is switched by its physical button.
 switch:
   - platform: template
     name: "${friendly_name}"
@@ -93,11 +81,9 @@ switch:
     turn_off_action:
       - script.execute: pulse_reset
 
-# Diagnostics utiles (optionnel mais pratique en cas de souci)
 sensor:
   - platform: wifi_signal
-    name: "${friendly_name} - Signal Wi-Fi"
+    name: "${friendly_name} - WiFi signal"
     update_interval: 60s
-
   - platform: uptime
     name: "${friendly_name} - Uptime"

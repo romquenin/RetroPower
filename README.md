@@ -75,3 +75,10 @@ The buck converter (console's raw 12V/8V → regulated 3.3V) is **external**, no
 ## Disclaimer
 
 These files are provided as-is, with no warranty. Always re-run KiCad's official DRC before ordering a batch of PCBs, and check the 3V3 rail with a multimeter before soldering an ESP32 module in for good.
+
+## Assembly notes (validated on a SNES, integrated board)
+
+- **D1/D2 (flyback, 1N4148WS):** in KiCad's `D_SOD-123` footprint pad 1 is the *cathode*. The cathode must go to 3V3, so mount D1/D2 **rotated 180° vs the silkscreen** (stripe toward the 3V3 pad). **D3** is mounted as per the silkscreen.
+- **GP0 (U1 pin 4) must be soldered** - it carries POWER_SENSE. Without it Home Assistant never sees the console state.
+- Connect the J6 sense wire to the console's 3.3V rail; grounds must be common (buck GND on the console motherboard).
+- J4: use COM (square) + NO, in parallel with the original power switch.
