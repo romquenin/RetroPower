@@ -51,8 +51,12 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 `firmware/retropower_template.yaml` — generic ESPHome template, to be duplicated for each console (change `device_name` / `friendly_name`). Pinout used:
 
 - GPIO0 — `POWER_SENSE` (reads the console's 3V3 rail)
-- GPIO3 — `RELAY_SET` (pulse → turns on, via Q1)
-- GPIO10 — `RELAY_RESET` (pulse → turns off, via Q2)
+- GPIO3 — `RELAY_SET` (100 ms pulse → turns on, via Q1)
+- GPIO10 — `RELAY_RESET` (100 ms pulse → turns off, via Q2)
+
+## Per-console notes
+
+Measurements, wiring and lessons learned for each console tested so far are in [`docs/consoles/`](docs/consoles/README.md).
 
 ## Generation scripts (KiCad / Python)
 

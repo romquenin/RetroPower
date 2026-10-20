@@ -11,6 +11,21 @@ substitutions:
 esphome:
   name: ${device_name}
   friendly_name: ${friendly_name}
+  # The relay is bistable: it keeps its last position without power. After a
+  # power cut or reboot it may still be closed, which turns the console on as
+  # soon as it is plugged in. If the sense input says "off" 3 s after boot,
+  # send a RESET pulse so the relay is open again.
+  # Only keep this if POWER_SENSE is reliable on your console, otherwise a
+  # reboot (e.g. an OTA update) could switch a running console off.
+  on_boot:
+    priority: -100
+    then:
+      - delay: 3s
+      - if:
+          condition:
+            binary_sensor.is_off: power_sense
+          then:
+            - script.execute: pulse_reset
 
 esp32:
   board: esp32-c3-devkitm-1
@@ -54,17 +69,18 @@ binary_sensor:
     filters:
       - delayed_on_off: 50ms
 
-# 30 ms pulses on the bistable relay coils
+# 100 ms pulses on the bistable relay coils (30 ms worked on some consoles,
+# but 100 ms is more reliable and gave a cleaner power-off on others)
 script:
   - id: pulse_set
     then:
       - output.turn_on: relay_set_pin
-      - delay: 30ms
+      - delay: 100ms
       - output.turn_off: relay_set_pin
   - id: pulse_reset
     then:
       - output.turn_on: relay_reset_pin
-      - delay: 30ms
+      - delay: 100ms
       - output.turn_off: relay_reset_pin
 
 # State always reflects reality (POWER_SENSE), even when the
