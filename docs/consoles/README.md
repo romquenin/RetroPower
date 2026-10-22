@@ -11,6 +11,7 @@ the same on every console; only the measurements differ.
 | [NES](nes.md) | see file | Working | |
 | [Mega Drive](mega-drive.md) | see file | Working | |
 | [Nintendo 64](n64.md) | see file | Working | **Two circuits to close (12 V + 3.3 V)** |
+| [PlayStation 2 (fat)](ps2.md) | see file | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off) |
 
 ## General procedure
 
@@ -41,6 +42,10 @@ the same on every console; only the measurements differ.
 - **Relay position after a power cut.** If the relay is left closed, the
   console turns on as soon as it is plugged in. The firmware template resets
   the relay at boot when the sense input says the console is off.
+- **Momentary (soft) power buttons** (PS2, and likely others): the button
+  contact is not a switch that stays closed. Use a script that closes the
+  relay for a moment and reopens it, and press only if POWER_SENSE says the
+  console is not already in the requested state. See [PS2](ps2.md).
 - **Power-off flash on the screen** (analogue video through a scaler) is
   cosmetic. A 100 ms RESET pulse reduced it.
 - **Probing a live console:** a slipping probe can trip the brick's
