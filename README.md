@@ -58,6 +58,10 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 
 Measurements, wiring and lessons learned for each console tested so far are in [`docs/consoles/`](docs/consoles/README.md).
 
+## Related projects
+
+- [`projects/toslink-switch-wifi/`](projects/toslink-switch-wifi/README.md) — Wi-Fi control of a CSL 41811 Toslink audio switch (ESPHome on a D1 mini, MOSFET on the IR-jack signal line), so the audio input follows the console that is running.
+
 ## Generation scripts (KiCad / Python)
 
 `scripts/` contains the Python scripts (using the `pcbnew` API) used to generate and route each board, plus the verification scripts (clearance, holes, connectivity, board-edge clearance, silkscreen, component-body overlap) used alongside KiCad's official DRC.

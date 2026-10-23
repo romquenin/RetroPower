@@ -1,0 +1,96 @@
+# =============================================================
+# Wi-Fi control for a CSL 41811 3x1 Toslink switch (ESPHome, D1 mini / ESP8266)
+#
+# The ESP replaces the switch's IR remote: it drives the signal line of the
+# switch's IR-receiver jack (CK1) through a MOSFET, with the NEC codes of the
+# original remote. See README.md in this folder for the wiring.
+#
+#   D2 (GPIO4) -> 100 ohm -> gate of the MOSFET (gate also 10 kohm to GND)
+#   MOSFET drain  -> signal pad of the IR jack
+#   MOSFET source -> GND (switch GND and D1 mini GND)
+# =============================================================
+
+substitutions:
+  device_name: "toslink-ir"
+  friendly_name: "Toslink IR"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+esp8266:
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# --- Transmitter -------------------------------------------------------
+# The jack carries the already demodulated signal (what the IR eye outputs),
+# so no 38 kHz carrier: the pin is simply high during each mark. The MOSFET
+# then pulls the signal line low, like the eye does when it sees light.
+remote_transmitter:
+  pin: GPIO4
+  carrier_duty_percent: 100%
+
+# --- Optional receiver (only to capture codes) -----------------------------
+# Needs a second MOSFET (gate on the signal line through 100 kohm, drain on
+# D5 with INPUT_PULLUP). The signal arrives inverted, hence inverted: false.
+# Never wire a GPIO to the signal line through a plain resistor: it loads the
+# line and the switch stops reacting to the remote. Leave this block commented
+# out when the sniffing MOSFET is not fitted.
+#
+# remote_receiver:
+#   pin:
+#     number: GPIO14
+#     mode: INPUT_PULLUP
+#     inverted: false
+#   dump: nec
+#   tolerance: 25%
+
+# NEC codes captured from a Harmony Hub driving this switch (address 0xFF00).
+button:
+  - platform: template
+    name: "${friendly_name} - Input 1"
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0xFF00
+          command: 0xA25D
+
+  - platform: template
+    name: "${friendly_name} - Input 2"
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0xFF00
+          command: 0xE11E
+
+  - platform: template
+    name: "${friendly_name} - Input 3"
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0xFF00
+          command: 0xE31C
+
+  # Toggles the switch (off / on again).
+  - platform: template
+    name: "${friendly_name} - Power"
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0xFF00
+          command: 0xE817
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
