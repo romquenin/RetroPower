@@ -12,7 +12,7 @@ simulates a button **press** (relay closed for a moment, then reopened).
 | Press on the Power button | Console off | Console on |
 |---|---|---|
 | Short | Turns on | Resets the game (not with a hard drive connected) |
-| Long (about 3 s) | | Turns off |
+| Long (hold 3 s or more, 4.5 s used) | | Turns off |
 
 ## Power button ribbon (SCPH-30004R / GH-015)
 
@@ -69,8 +69,9 @@ adds a `press_button` script (SET, hold, RESET), a Reset button entity, a
 when the console is stuck or the sense input is wrong; it turns the console
 ON if it is really off), and opens the relay contact at boot so that a relay
 left closed cannot hold the button pressed. The power-off press length
-(`press_off_ms`, 3000 ms) is the value to tune on your console: on ours it
-stopped being enough at some point, while the 6 s Force off press always worked.
+(`press_off_ms`, 4500 ms) is the value to tune on your console: 3000 ms
+stopped being enough on ours at some point and 4500 ms works, and the 6 s Force
+off press always worked.
 
 ## Notes
 

@@ -9,7 +9,7 @@ substitutions:
   device_name: "retropower-ps2"
   friendly_name: "PS2 Power"
   press_on_ms: "300"      # short press: power on
-  press_off_ms: "3000"    # long press: power off (PS2 = held press, adjust when testing)
+  press_off_ms: "4500"    # long press: power off (3000 ms was not always enough on our console; adjust when testing)
   press_reset_ms: "300"   # short press while the console is on: game reset
   press_force_ms: "6000"  # long press: forced power off, whatever POWER_SENSE says
 
