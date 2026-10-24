@@ -11,7 +11,7 @@ the same on every console; only the measurements differ.
 | [NES](nes.md) | see file | Working | |
 | [Mega Drive](mega-drive.md) | see file | Working | |
 | [Nintendo 64](n64.md) | see file | Working | **Two circuits to close (12 V + 3.3 V)** |
-| [PlayStation 2 (fat)](ps2.md) | see file | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off) |
+| [PlayStation 2 (fat)](ps2.md) | see file | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off). Reset is disabled by the console once a hard drive is connected |
 
 ## General procedure
 

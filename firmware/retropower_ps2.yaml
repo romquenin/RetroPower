@@ -11,6 +11,7 @@ substitutions:
   press_on_ms: "300"      # short press: power on
   press_off_ms: "3000"    # long press: power off (PS2 = held press, adjust when testing)
   press_reset_ms: "300"   # short press while the console is on: game reset
+  press_force_ms: "6000"  # long press: forced power off, whatever POWER_SENSE says
 
 esphome:
   name: ${device_name}
@@ -75,17 +76,18 @@ binary_sensor:
       - delayed_on_off: 50ms   # debounce / noise filter
 
 script:
-  # Pulses on the bistable relay coils (30 ms is enough, about 25 ms minimum)
+  # Pulses on the bistable relay coils: 100 ms (30 ms is near the minimum and was
+  # not reliable enough: a missed RESET leaves the contact closed = held button)
   - id: pulse_set
     then:
       - output.turn_on: relay_set_pin
-      - delay: 30ms
+      - delay: 100ms
       - output.turn_off: relay_set_pin
 
   - id: pulse_reset
     then:
       - output.turn_on: relay_reset_pin
-      - delay: 30ms
+      - delay: 100ms
       - output.turn_off: relay_reset_pin
 
   # Simulates a press of "hold_ms" milliseconds on the Power button:
@@ -129,6 +131,8 @@ switch:
 
 # "Reset" button for Home Assistant: short press on Power while the console
 # is ON. Does nothing if the console is off, so it never powers it on by mistake.
+# Note: the PS2 disables its reset button while a hard drive is connected
+# (see docs/consoles/ps2.md), so this button does nothing on such a console.
 button:
   - platform: template
     name: "${friendly_name} - Reset"
@@ -140,6 +144,18 @@ button:
             - script.execute:
                 id: press_button
                 hold_ms: ${press_reset_ms}
+
+  # "Force off" button: long press on Power WITHOUT checking POWER_SENSE.
+  # Use it when the console is stuck, or when the sense input is wrong
+  # (e.g. the console is on but Home Assistant says it is off).
+  # Warning: if the console is really off, the press turns it ON, so only use
+  # this button on a console that is running.
+  - platform: template
+    name: "${friendly_name} - Force off"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_force_ms}
 
 # Useful diagnostics (optional)
 sensor:

@@ -1,6 +1,7 @@
 # PlayStation 2 (fat)
 
-Status: **working** (power on, power off and game reset from Home Assistant).
+Status: **working** (power on and power off from Home Assistant). Game reset
+works only while no hard drive is connected, see the note below.
 Tested on an SCPH-30004R (motherboard GH-015).
 
 Unlike the other consoles in this folder, the PS2 power button is a
@@ -10,7 +11,7 @@ simulates a button **press** (relay closed for a moment, then reopened).
 
 | Press on the Power button | Console off | Console on |
 |---|---|---|
-| Short | Turns on | Resets the game |
+| Short | Turns on | Resets the game (not with a hard drive connected) |
 | Long (about 3 s) | | Turns off |
 
 ## Power button ribbon (SCPH-30004R / GH-015)
@@ -63,10 +64,13 @@ with continuity that one pad goes to pin 2 and the other to pin 4.
 ## Firmware
 
 Use [`firmware/retropower_ps2.yaml`](../../firmware/retropower_ps2.yaml). It
-adds a `press_button` script (SET, hold, RESET), a Reset button entity, and
-opens the relay contact at boot so that a relay left closed cannot hold the
-button pressed. The power-off press length (`press_off_ms`, 3000 ms) is the
-value to tune on your console.
+adds a `press_button` script (SET, hold, RESET), a Reset button entity, a
+**Force off** button (a long press that does not look at POWER_SENSE, useful
+when the console is stuck or the sense input is wrong; it turns the console
+ON if it is really off), and opens the relay contact at boot so that a relay
+left closed cannot hold the button pressed. The power-off press length
+(`press_off_ms`, 3000 ms) is the value to tune on your console: on ours it
+stopped being enough at some point, while the 6 s Force off press always worked.
 
 ## Notes
 
@@ -74,3 +78,18 @@ value to tune on your console.
   state, so POWER_SENSE has to be reliable.
 - Do not add a "reset relay at boot" that closes the contact: on this console
   that would press the button.
+- **Coil pulses: use 100 ms.** With 30 ms (close to the relay's minimum) a
+  RESET pulse was sometimes missed, which leaves the contact closed, i.e. the
+  button held down (the console stayed in reset: green LED, no boot, no power
+  on the controller ports).
+- **Reset does nothing once a hard drive is connected.** On our console the
+  Reset button worked during the first tests (console out of its case, no hard
+  drive) and stopped working after the hard drive was fitted; presses of 500 ms
+  to 2 s from the relay had no effect, while the long power-off press still
+  worked. A reply from the owner of the PSBBN Definitive Project says that this
+  is by Sony's design: when a hard drive is connected, the reset button is
+  disabled to prevent drive corruption
+  ([issue #404](https://github.com/CosmicScale/PSBBN-Definitive-Project/issues/404)).
+  We have not checked this ourselves beyond the behaviour above. The same
+  reply mentions a controller key combination to leave a game when OPL is the
+  game launcher; see that project's readme.
