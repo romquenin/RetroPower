@@ -37,8 +37,8 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 | U1 | ESP32-C3-Zero (Waveshare) ⚠️ | 18-pin castellated module, 2.54mm pitch | **Version with the antenna at the end of the board, isolated from the other components** (see warning below). Integrated version only: soldered to the back of the PCB |
 | K1 | HFD2/003-M-L2-D (Hongfa) | DIP-16 (10 real pins) | Bistable 2xRT relay |
 | Q1, Q2 | AO3400A | SOT-23 | N-channel MOSFET |
-| D1, D2 | 1N4148WS | SOD-123 | Flyback diodes (relay coils) |
-| D3 | 1N5819WS | SOD-123 | Reverse-polarity protection on RAW_IN |
+| D1, D2 | 1N4148WS | SOD-123 | Flyback diodes (relay coils). **Orientation: the stripe (cathode) goes on the OPEN side of the rectangle on the silkscreen** |
+| D3 | 1N5819WS | SOD-123 | Reverse-polarity protection on RAW_IN. **Orientation: the stripe (cathode) goes on the CLOSED side of the rectangle on the silkscreen** |
 | R1, R2 | 100R | 0805, 1/4W 5% | Series gate resistors |
 | R3, R4 | 10k | 0805, 1/4W 5% | Gate pulldowns |
 | C1 | 100µF / 16V | SMD electrolytic, 6.3x5.4mm | — |
