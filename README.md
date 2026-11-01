@@ -41,6 +41,33 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 
 > ⚠️ **Pick the right ESP32-C3 module.** Use the **Waveshare ESP32-C3-Zero** whose ceramic antenna sits **at the end of the board, set apart from the other components**. The PCB is designed so this antenna ends up on the outer edge, clear of any copper. Look-alike boards (clones, "ESP32-C3 Super Mini"…) where the antenna sits among the components, or a different pinout, will give poor Wi-Fi reception and may not fit the footprint. Check the product photos before ordering.
 
+### ESP32-C3-Zero pin order (check before ordering)
+
+The footprint matches the **pin order of the Waveshare ESP32-C3-Zero**. Some look-alike modules use the same size but a **different pin order**: with those, the power and GPIO pins end up in the wrong place. Compare your module with the order below before soldering.
+
+Module seen **from its back side** (the side soldered to the PCB), antenna on the left, USB-C on the right:
+
+| Row | Pins (antenna side → USB-C side) |
+|---|---|
+| Top (pins 10 → 18) | GP6 · GP7 · GP8 · GP9 · **GP10** · GP18 · GP19 · GP20 · GP21 |
+| Bottom (pins 9 → 1) | GP5 · GP4 · **GP3** · GP2 · GP1 · **GP0** · **3V3** · **GND** · 5V |
+
+Pins used by RetroPower:
+
+| Module pin | Signal | Role |
+|---|---|---|
+| 2 · GND | GND | Common ground |
+| 3 · 3V3 | 3V3 | Power from the 3.3 V buck (5V pin stays unconnected) |
+| 4 · GP0 | POWER_SENSE | Reads the console state |
+| 7 · GP3 | RELAY_SET | Relay SET (turn on) |
+| 14 · GP10 | RELAY_RESET | Relay RESET (turn off), also drives the module's RGB LED |
+
+<!-- Photo of the correct module (back side, pin labels visible): add it as docs/images/esp32-c3-zero-pinout.jpg and uncomment the line below.
+![ESP32-C3-Zero pinout](docs/images/esp32-c3-zero-pinout.jpg)
+-->
+
+Full details and the pin-spacing check: [`hardware/integrated/README.md`](hardware/integrated/README.md).
+
 **Off the PCB (external, per console):**
 
 - A buck converter module (raw 12V/8V → regulated 3.3V) — any small off-the-shelf buck board rated for the console's raw voltage works; test it unloaded before wiring it in.
