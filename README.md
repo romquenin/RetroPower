@@ -5,7 +5,7 @@ Home Assistant-controlled power module for retro consoles, built around an ESP32
 ## Two PCB versions
 
 ### `hardware/integrated/` — integrated version (recommended)
-The ESP32-C3-Zero module (Waveshare, 18 castellated pins) is **soldered directly to the back of the PCB** — no flying wires. The antenna ends up on the outer edge of the board, completely clear of any copper/metal on both sides, for the best possible WiFi/Bluetooth reception.
+The ESP32-C3-Zero module (Waveshare, 18 castellated pins, **antenna version isolated at the end of the board**, see the BOM warning) is **soldered directly to the back of the PCB** — no flying wires. The antenna ends up on the outer edge of the board, completely clear of any copper/metal on both sides, for the best possible WiFi/Bluetooth reception.
 
 - Dimensions: 53.335 x 32.75 mm
 - Official KiCad DRC: 0 errors / 0 warnings (v4)
@@ -28,7 +28,7 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 
 | Ref | Part | Package | Notes |
 |---|---|---|---|
-| U1 | ESP32-C3-Zero (Waveshare) | 18-pin castellated module, 2.54mm pitch | Integrated version only — soldered to the back of the PCB |
+| U1 | ESP32-C3-Zero (Waveshare) ⚠️ | 18-pin castellated module, 2.54mm pitch | **Version with the antenna at the end of the board, isolated from the other components** (see warning below). Integrated version only: soldered to the back of the PCB |
 | K1 | HFD2/003-M-L2-D (Hongfa) | DIP-16 (10 real pins) | Bistable 2xRT relay |
 | Q1, Q2 | AO3400A | SOT-23 | N-channel MOSFET |
 | D1, D2 | 1N4148WS | SOD-123 | Flyback diodes (relay coils) |
@@ -38,6 +38,8 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 | C1 | 100µF / 16V | SMD electrolytic, 6.3x5.4mm | — |
 | C2 | 100nF | 0805 ceramic | HF decoupling on 3V3 |
 | J1–J6 | 2.54mm pin headers | 2 to 5 pins, vertical | See each version's wiring notes |
+
+> ⚠️ **Pick the right ESP32-C3 module.** Use the **Waveshare ESP32-C3-Zero** whose ceramic antenna sits **at the end of the board, set apart from the other components**. The PCB is designed so this antenna ends up on the outer edge, clear of any copper. Look-alike boards (clones, "ESP32-C3 Super Mini"…) where the antenna sits among the components, or a different pinout, will give poor Wi-Fi reception and may not fit the footprint. Check the product photos before ordering.
 
 **Off the PCB (external, per console):**
 
