@@ -11,12 +11,18 @@ The ESP32-C3-Zero module (Waveshare, 18 castellated pins, **antenna version isol
 - Official KiCad DRC: 0 errors / 0 warnings (v4)
 - See `README.md` in this folder for the changelog and the pin-spacing verification procedure to run before soldering the module for good.
 
+<img width="1143" height="702" alt="sm_green_top (1)" src="https://github.com/user-attachments/assets/a69a00d4-70a4-4928-a85d-eebd806ac32e" />
+
+
 ### `hardware/compact/` — compact version (fallback)
 The ESP32-C3-Zero module is connected via flying wires (not soldered directly onto the PCB). Immune to dimensional variation between modules — useful as a fallback if the integrated version ever runs into a physical compatibility issue.
 
 - Dimensions: 40.45 x 32.75 mm
 - Official KiCad DRC: 0 errors / 0 warnings (v11)
 - See `README.md` and `WIRING.md` in this folder.
+
+<img width="1123" height="910" alt="sm_green_top" src="https://github.com/user-attachments/assets/41fc7552-13aa-4425-9eb9-e23fb433d2f4" />
+
 
 Each folder contains: the `.kicad_pcb`/`.kicad_pro` files, the gerbers (folder + zip), the component position file (`_pos.csv`), the BOM (`BOM.csv`), a rendered image of the routed board, and a `README.md` explaining the design choices.
 
@@ -42,6 +48,9 @@ Full per-reference BOM (with placement notes) is in each version's own `BOM.csv`
 > ⚠️ **Pick the right ESP32-C3 module.** Use the **Waveshare ESP32-C3-Zero** whose ceramic antenna sits **at the end of the board, set apart from the other components**. The PCB is designed so this antenna ends up on the outer edge, clear of any copper. Look-alike boards (clones, "ESP32-C3 Super Mini"…) where the antenna sits among the components, or a different pinout, will give poor Wi-Fi reception and may not fit the footprint. Check the product photos before ordering.
 
 ### ESP32-C3-Zero pin order (check before ordering)
+
+<img width="827" height="591" alt="Sans titre-1" src="https://github.com/user-attachments/assets/4ab96921-4050-4042-9509-2f850d7f2c30" />
+
 
 The footprint matches the **pin order of the Waveshare ESP32-C3-Zero**. Some look-alike modules use the same size but a **different pin order**: with those, the power and GPIO pins end up in the wrong place. Compare your module with the order below before soldering.
 
