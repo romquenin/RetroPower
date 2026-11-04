@@ -1,0 +1,159 @@
+# =============================================================
+# RetroPower — PlayStation 4 Pro (NVA-001) on a D1 mini
+#
+# No relay: the power button is a soft button, so a single device
+# (PhotoMOS AQY210EH, or an AO3400A MOSFET) pulls its line to ground.
+# See docs/soft-power-buttons.md and docs/consoles/ps4-pro.md.
+#
+# Wiring:
+#   PhotoMOS pin 1 <- 470 ohm <- D2 (GPIO4)
+#   PhotoMOS pin 2 -> GND
+#   PhotoMOS pins 3 and 4 -> the two power-button pads (either way round)
+#   D1 mini 5V  <- permanent 5 V from the motherboard. Pick a point that can
+#                  actually supply ~100 mA: a weak rail collapses and stops
+#                  the console from booting.
+#   D1 mini G   <- the USB port's shield solder tab
+#   D5 (GPIO14) <- midpoint of a divider on a front USB port's VBUS:
+#                  10k between VBUS and the midpoint, 2 x 10k in series
+#                  between the midpoint and ground -> 3.47 V when running.
+#
+# Console setting: "Supply Power to USB Ports" in rest mode must be OFF,
+# otherwise the sense stays high in rest.
+#
+# Never plug the D1 mini's USB in while the console is powering it.
+#
+# Press durations measured on this console:
+#   300 ms -> powers on (not enough to switch off)
+#   2 s    -> switches off / goes to rest
+#   8 s    -> full shutdown, two beeps. This is what the HA switch uses.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-ps4"
+  friendly_name: "PS4 Power"
+  press_on_ms: "300"       # short press: power on, or wake from rest
+  press_off_ms: "2000"     # long press: switch off / go to rest
+  press_force_ms: "8000"   # hold: full shutdown
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # At boot, make sure the button is released.
+  on_boot:
+    priority: -100
+    then:
+      - output.turn_off: button_pin
+
+esp8266:
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20dB
+  # Static IP: use a DIFFERENT address for each board/console!
+  manual_ip:
+    static_ip: 192.168.2.242
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# D2 = GPIO4: high = device conducts = power button pressed
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: button_pin
+
+binary_sensor:
+  - platform: gpio
+    id: power_sense
+    name: "${friendly_name} - Console on (sensor)"
+    pin:
+      number: GPIO14       # D5, through the divider. High = running.
+      mode: INPUT
+    filters:
+      - delayed_on_off: 50ms
+
+script:
+  # Simulates a press of "hold_ms" milliseconds on the power button.
+  - id: press_button
+    mode: single
+    parameters:
+      hold_ms: int
+    then:
+      - output.turn_on: button_pin
+      - delay: !lambda 'return hold_ms;'
+      - output.turn_off: button_pin
+
+# The switch follows POWER_SENSE. We only press if the console is not
+# already in the requested state. Switching off does a full shutdown.
+switch:
+  - platform: template
+    name: "${friendly_name}"
+    id: console_power
+    optimistic: false
+    lambda: |-
+      return id(power_sense).state;
+    turn_on_action:
+      - if:
+          condition:
+            binary_sensor.is_off: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_on_ms}
+    turn_off_action:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_force_ms}
+
+button:
+  # Short press whatever the state: powers on, wakes from rest, and is handy
+  # if the sense is wrong.
+  - platform: template
+    name: "${friendly_name} - Short press"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_on_ms}
+
+  # 2 s press: switch off / go to rest, without checking the sense.
+  - platform: template
+    name: "${friendly_name} - Rest mode"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_off_ms}
+
+  # 8 s hold: full shutdown, without checking the sense.
+  # Careful: if the console is really off, this turns it ON.
+  - platform: template
+    name: "${friendly_name} - Full shutdown"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_force_ms}
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:

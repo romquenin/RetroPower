@@ -2,6 +2,8 @@
 
 Home Assistant-controlled power module for retro consoles, built around an ESP32-C3 — 2-layer PCB (KiCad), with a relay that emulates the console's power button for remote on/off.
 
+Consoles with a **real power switch** (SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1) use this board. Consoles with a **soft / momentary / touch button** (PS2, PS3, PS4 Pro, Xbox 360, Wii, Wii U) need no PCB at all — just an ESP, one PhotoMOS and one resistor. That variant is documented in [`docs/soft-power-buttons.md`](docs/soft-power-buttons.md).
+
 ## Two PCB versions
 
 ### `hardware/integrated/` — integrated version (recommended)
@@ -86,11 +88,30 @@ Full details and the pin-spacing check: [`hardware/integrated/README.md`](hardwa
 
 ## Firmware
 
-`firmware/retropower_template.yaml` — generic ESPHome template, to be duplicated for each console (change `device_name` / `friendly_name`). Pinout used:
+ESPHome configs, in `firmware/`. Duplicate the template that matches your build and change `device_name` / `friendly_name` / the static IP — **one unique IP per console**.
+
+| File | For |
+|---|---|
+| `retropower_template.yaml` | Relay board + ESP32-C3-Zero (validated on a SNES) |
+| `retropower_template_esp8266.yaml` | Relay board + D1 mini (validated on a Master System) |
+| `retropower_ps2.yaml` | PS2 fat — relay, momentary button |
+| `retropower_ps4.yaml` | PS4 Pro — PhotoMOS, no relay |
+
+Pinout on the **ESP32-C3** board:
 
 - GPIO0 — `POWER_SENSE` (reads the console's 3V3 rail)
 - GPIO3 — `RELAY_SET` (100 ms pulse → turns on, via Q1)
 - GPIO10 — `RELAY_RESET` (100 ms pulse → turns off, via Q2)
+
+Same board with a **D1 mini** soldered in instead (ESP8266: GPIO0 is a boot strapping pin, GPIO3 is the serial RX and GPIO10 is not brought out, so the three pins have to move):
+
+- GPIO14 / `D5` — `POWER_SENSE`
+- GPIO5 / `D1` — `RELAY_SET`
+- GPIO4 / `D2` — `RELAY_RESET`
+
+The `D0`–`D8` labels are silkscreen only and have nothing to do with the GPIO numbers — always write the GPIO number in the YAML.
+
+On the **no-relay** builds, a single `output` drives the PhotoMOS (`GPIO4` / `D2`, through a 470 Ω) and `GPIO14` / `D5` reads the sense. The press duration is what distinguishes power-on, standby and forced shutdown, and it has to be measured per console.
 
 ## Per-console notes
 

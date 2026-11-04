@@ -1,19 +1,45 @@
 # Per-console installation notes
 
-RetroPower emulates the console's power button with a bistable relay (K1),
-and reads the console's power state on `POWER_SENSE` (J6). The procedure is
-the same on every console; only the measurements differ.
+RetroPower reads the console's power state on `POWER_SENSE` and emulates a
+press of its power button. *How* that press is emulated depends on the
+console, and there are two different architectures.
 
-| Console | Board used | Status | Notes |
+## Two architectures
+
+| | Bistable relay (the RetroPower board) | Single switching device, no relay |
+|---|---|---|
+| For | A real power switch that carries the rails | A soft / momentary / touch button |
+| Current switched | up to ~1 A | a few µA of logic |
+| Part | HFD2/003-M-L2-D | PhotoMOS AQY210EH (or an AO3400A MOSFET) |
+| Keeps its state without power | yes | no — it is a pulse |
+| Consoles | SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1 | PS2, PS3, PS4 Pro, Xbox 360, Wii, Wii U |
+
+The second one needs no PCB at all: an ESP (D1 mini or a bare ESP-12F), one
+PhotoMOS and one resistor. It is written up in
+[soft-power-buttons.md](../soft-power-buttons.md).
+
+## Consoles
+
+| Console | Build | Status | Notes |
 |---|---|---|---|
-| [SNES](snes.md) | Integrated | Working | First board built |
-| [GameCube](gamecube.md) | Compact | Working | Switch = small PCB button |
-| [NES](nes.md) | see file | Working | |
-| [Mega Drive](mega-drive.md) | see file | Working | |
-| [Nintendo 64](n64.md) | see file | Working | **Two circuits to close (12 V + 3.3 V)** |
-| [PlayStation 2 (fat)](ps2.md) | see file | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off). Reset is disabled by the console once a hard drive is connected |
+| [SNES](snes.md) | Relay, integrated board | Working | First board built |
+| [NES](nes.md) | Relay | Working | |
+| [Mega Drive](mega-drive.md) | Relay | Working | A Reset button is designed but not built yet |
+| [Master System](master-system.md) | Relay, integrated board | Working | **ESP32-C3-Zero swapped for a D1 mini** on an assembled board |
+| [Nintendo 64](n64.md) | Relay | Working | **Two circuits to close (12 V + 3.3 V)** |
+| [GameCube](gamecube.md) | Relay, compact board | Working | Switch = small PCB button |
+| [PlayStation 1](ps1.md) | Relay, integrated board | Working | **Two poles** (7.5 V + 3.5 V) on the low-voltage side of the switch |
+| [PlayStation 2 (fat)](ps2.md) | Relay | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off). Reset is disabled by the console once a hard drive is connected |
+| [PlayStation 3](ps3.md) | PhotoMOS + D1 mini | Working | Everything on the DSW-001 connector. **Do not use the compact PCB here** |
+| [PlayStation 4 Pro](ps4-pro.md) | PhotoMOS + D1 mini | Working | Sense on a front USB VBUS, through a divider |
+| [Xbox 360 Slim](xbox360-slim.md) | PhotoMOS + D1 mini | Working | Tap POWERSW on the motherboard side |
+| [Wii](wii.md) | ESP-12F + PhotoMOS | Prepared, not installed | Two different 3.3 V rails — do not mix them up |
+| [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Prepared, not installed | Test points are silkscreened `TPxxx` on the board |
 
-## General procedure
+Saturn and Dreamcast are also running, with the standard relay procedure
+below and nothing console-specific worth recording.
+
+## General procedure (relay version)
 
 1. **Find the always-on supply.** Measure with the multimeter in DC volts,
    console off but its power brick plugged in. You need a point that stays
@@ -29,6 +55,9 @@ the same on every console; only the measurements differ.
 4. **Flash** the ESP32 over USB the first time (hold BOOT while plugging in
    if the port is not detected), then use OTA. One unique static IP per
    console.
+
+For the no-relay version, the procedure is in
+[soft-power-buttons.md](../soft-power-buttons.md).
 
 ## Pitfalls we hit
 
@@ -46,7 +75,26 @@ the same on every console; only the measurements differ.
   contact is not a switch that stays closed. Use a script that closes the
   relay for a moment and reopens it, and press only if POWER_SENSE says the
   console is not already in the requested state. See [PS2](ps2.md).
+- **A rail that measures 5 V unloaded is not necessarily a 5 V supply.** On
+  the PS4 Pro the first candidate point collapsed to 2 V once the D1 mini
+  was drawing from it, and the console would not boot. On the Xbox 360 the
+  front panel's 3.3 V browned out on Wi-Fi peaks. Measure again **with the
+  ESP connected and running**, not just with a multimeter on an idle point.
+- **An always-on standby rail cannot be used as the sense.** It never drops
+  to 0 V, so Home Assistant would see the console as permanently on and
+  could never switch it off. This bites on the Wii (3V3 Standby) and the
+  Wii U (connected standby stays on the network).
+- **Worn front-panel ribbons.** On the Xbox 360 Slim, a tired flat cable
+  made the power button hypersensitive and fired random repeated presses —
+  only when the ribbon was plugged in. Hours were spent looking for coupling
+  between the signal wires; replacing the ribbon fixed it outright. If the
+  symptom only appears with one connector in place, suspect the connector.
+- **Press durations are per-console and must be measured.** 300 ms on a PS4
+  Pro, 500 ms on a PS3, 8 s for a PS4 full shutdown. The same value does not
+  carry over.
 - **Power-off flash on the screen** (analogue video through a scaler) is
   cosmetic. A 100 ms RESET pulse reduced it.
 - **Probing a live console:** a slipping probe can trip the brick's
   protection. Probe the ground first, then the test point, and do not slide.
+- **Never plug the ESP's USB in while the console is powering it.** On the
+  no-relay builds the 5 V pin is wired straight to the motherboard.
