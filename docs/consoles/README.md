@@ -12,7 +12,7 @@ console, and there are two different architectures.
 | Current switched | up to ~1 A | a few µA of logic |
 | Part | HFD2/003-M-L2-D | PhotoMOS AQY210EH (or an AO3400A MOSFET) |
 | Keeps its state without power | yes | no — it is a pulse |
-| Consoles | SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1 | PS2, PS3, PS4 Pro, Xbox 360, Wii, Wii U |
+| Consoles | SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1 | PS2, PS3, PS4 Pro, Xbox OG, Xbox 360, Wii, Wii U |
 
 The second one needs no PCB at all: an ESP (D1 mini or a bare ESP-12F), one
 PhotoMOS and one resistor. It is written up in
@@ -32,6 +32,7 @@ PhotoMOS and one resistor. It is written up in
 | [PlayStation 2 (fat)](ps2.md) | Relay | Working | **Momentary button**: the relay simulates a press (short = on / reset, long = off). Reset is disabled by the console once a hard drive is connected |
 | [PlayStation 3](ps3.md) | PhotoMOS + D1 mini | Working | Everything on the DSW-001 connector. **Do not use the compact PCB here** |
 | [PlayStation 4 Pro](ps4-pro.md) | PhotoMOS + D1 mini | Working | Sense on a front USB VBUS, through a divider |
+| [Xbox OG](xbox-og.md) | PhotoMOS + D1 mini | Working | Standby and sense voltages depend on the board revision |
 | [Xbox 360 Slim](xbox360-slim.md) | PhotoMOS + D1 mini | Working | Tap POWERSW on the motherboard side |
 | [Wii](wii.md) | ESP-12F + PhotoMOS | Prepared, not installed | Two different 3.3 V rails — do not mix them up |
 | [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Prepared, not installed | Test points are silkscreened `TPxxx` on the board |

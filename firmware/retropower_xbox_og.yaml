@@ -1,0 +1,197 @@
+# =============================================================
+# RetroPower — Xbox OG (original Xbox, 2001) on a D1 mini
+#
+# Status: validated. Works from Home Assistant and from the console's own
+# power button.
+#
+# No relay: the front power button is a momentary push button that simply
+# shorts the SMC's power-button line to ground. One PhotoMOS AQY210EH
+# across it is enough. See docs/soft-power-buttons.md.
+#
+# The PhotoMOS is the right part here precisely because nobody documents
+# which way that line sits: its output is a real floating contact, so
+# polarity does not matter (a MOSFET would need the line to be positive
+# vs. its source, or its body diode clamps it).
+#
+# ---------------------------------------------------------------
+# WIRING
+#
+#   PhotoMOS pin 1 <- 470 ohm <- D2 (GPIO4)
+#   PhotoMOS pin 2 -> D1 mini G
+#   PhotoMOS pins 3 and 4 -> the two power-button pads (either way round)
+#
+# Tap the button on the MOTHERBOARD side of the front-panel ribbon, not on
+# the front PCB. Lesson from the Xbox 360 Slim: a tired ribbon makes the
+# button hypersensitive and fires random presses. Run the two wires
+# tightly together — this line is known to pick up noise (the memory-card
+# power-button mod reports random power-ons with poorly shielded cable).
+#
+# !! Take the ground from a real GND pin of the PSU connector. Picking the
+# wrong pin here is what cost the first attempt on this console: the module
+# came up but the behaviour was erratic. Check the pin with the multimeter
+# before soldering rather than going by a pin count.
+#
+# ---------------------------------------------------------------
+# POWER AND SENSE — depends on the motherboard revision
+#
+# Check your revision first (1.0/1.1, 1.2-1.5, or 1.6). The PSU connector
+# pinout and, more importantly, the standby voltage, are different.
+#
+# 1.0 / 1.1 — single column, 12 pins, pin 1 nearest the back:
+#     pin 7  = +3.3V STANDBY  -> powers the D1 mini, on its 3V3 pin
+#     pin 8  = +3.3V main     -> SENSE, straight to D5, no divider
+#     pins 3-6 = GND
+#
+# 1.2 / 1.3 / 1.4 / 1.5 — two columns of 10:
+#     col 2 pin 6 = +3.3V STANDBY -> powers the D1 mini, on its 3V3 pin
+#     col 1 pin 4 or col 2 pin 3 = +3.3V main -> SENSE, straight to D5
+#     col 1 pin 2 / col 2 pin 2 = GND
+#
+# 1.6 — the standby rail is 5 V here, not 3.3 V:
+#     col 1 pins 8-10, col 2 pin 8 = +5V STANDBY -> D1 mini 5V pin
+#     no clean main 3.3 V is documented on this connector. Find a switched
+#     3.3 V elsewhere on the board, or take a switched 5 V through a
+#     divider like the PS4 Pro: 10k to the midpoint, 2 x 10k IN SERIES to
+#     ground -> 3.47 V. Two 10k stacked on top of each other is parallel
+#     = 5k = wrong.
+#
+# Feeding 3.3 V into the D1 mini's `3V3` pin bypasses its own regulator.
+# That is fine and is what the bare-module builds do.
+#
+# !! The 3.3 V standby rail feeds the SMC and the front panel and is not
+# sized for an ESP. MEASURE IT AGAIN with the D1 mini connected and
+# associated to Wi-Fi, not just with a multimeter on an idle pin. If it
+# sags, or the console starts misbehaving when off (eject button dead,
+# no power-on), move to the main 12 V through a small buck instead.
+# 100 nF close to the module in any case.
+#
+# Never plug the D1 mini's USB in while the console is powering it.
+#
+# ---------------------------------------------------------------
+# PRESS DURATION
+#
+# On this console a single short press toggles: off -> on, on -> off
+# (the SMC cuts power straight away, there is no hold-to-force-off to
+# find). 300 ms works, same value as the Xbox 360 Slim.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-xbox"
+  friendly_name: "Xbox OG Power"
+  press_ms: "300"          # short press: toggles the console
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # At boot, make sure the button is released.
+  on_boot:
+    priority: -100
+    then:
+      - output.turn_off: button_pin
+
+esp8266:
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20dB
+  power_save_mode: none
+  # Static IP: use a DIFFERENT address for each board/console!
+  manual_ip:
+    static_ip: 192.168.2.245
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# D2 = GPIO4: high = PhotoMOS conducts = power button pressed
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: button_pin
+
+binary_sensor:
+  - platform: gpio
+    id: power_sense
+    name: "${friendly_name} - Console on (sensor)"
+    pin:
+      number: GPIO14       # D5, main 3.3 V rail. High = running.
+      mode: INPUT
+    filters:
+      - delayed_on_off: 50ms
+
+script:
+  # Simulates a press of "hold_ms" milliseconds on the power button.
+  - id: press_button
+    mode: single
+    parameters:
+      hold_ms: int
+    then:
+      - output.turn_on: button_pin
+      - delay: !lambda 'return hold_ms;'
+      - output.turn_off: button_pin
+
+# The switch follows POWER_SENSE. We only press if the console is not
+# already in the requested state, so a double command cannot toggle it back.
+switch:
+  - platform: template
+    name: "${friendly_name}"
+    id: console_power
+    optimistic: false
+    lambda: |-
+      return id(power_sense).state;
+    turn_on_action:
+      - if:
+          condition:
+            binary_sensor.is_off: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_ms}
+    turn_off_action:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_ms}
+
+button:
+  # Short press whatever the state — handy while you are still testing,
+  # or if the sense turns out to be wrong.
+  - platform: template
+    name: "${friendly_name} - Short press"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_ms}
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:
+
+# ---------------------------------------------------------------
+# IDEA, not designed yet: the eject button
+#
+# The eject button also powers the console on, and opens the tray when it
+# is running. A second PhotoMOS across it, on another free GPIO (D6 =
+# GPIO12), would give you an "open the tray" button in Home Assistant.
+# Same wiring as above, same 470 ohm.
+# ---------------------------------------------------------------

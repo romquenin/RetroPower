@@ -2,7 +2,7 @@
 
 Home Assistant-controlled power module for retro consoles, built around an ESP32-C3 — 2-layer PCB (KiCad), with a relay that emulates the console's power button for remote on/off.
 
-Consoles with a **real power switch** (SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1) use this board. Consoles with a **soft / momentary / touch button** (PS2, PS3, PS4 Pro, Xbox 360, Wii, Wii U) need no PCB at all — just an ESP, one PhotoMOS and one resistor. That variant is documented in [`docs/soft-power-buttons.md`](docs/soft-power-buttons.md).
+Consoles with a **real power switch** (SNES, NES, Mega Drive, Master System, N64, GameCube, Saturn, Dreamcast, PS1) use this board. Consoles with a **soft / momentary / touch button** (PS2, PS3, PS4 Pro, Xbox OG, Xbox 360, Wii, Wii U) need no PCB at all — just an ESP, one PhotoMOS and one resistor. That variant is documented in [`docs/soft-power-buttons.md`](docs/soft-power-buttons.md).
 
 ## Two PCB versions
 
@@ -96,6 +96,7 @@ ESPHome configs, in `firmware/`. Duplicate the template that matches your build 
 | `retropower_template_esp8266.yaml` | Relay board + D1 mini (validated on a Master System) |
 | `retropower_ps2.yaml` | PS2 fat — relay, momentary button |
 | `retropower_ps4.yaml` | PS4 Pro — PhotoMOS, no relay |
+| `retropower_xbox_og.yaml` | Xbox OG — PhotoMOS, no relay |
 
 Pinout on the **ESP32-C3** board:
 
