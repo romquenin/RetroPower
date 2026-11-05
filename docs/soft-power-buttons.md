@@ -6,12 +6,17 @@ closed, and it has to pass an amp or so.
 
 Consoles from the PS3 generation onwards do not work like that. Their power
 button is a **logic input**: a touch pad or a micro-switch whose only job is
-to pull one line to ground so the console's management controller sees a
-press. That line carries microamps.
+to change the level of one line so the console's management controller sees
+a press. That line carries microamps.
+
+Almost always the button pulls that line **to ground**. Not always: on the
+**Wii** it brings a 3.3 V standby supply onto a line that sits at 0 V. See
+[the Wii notes](consoles/wii.md). Measure both button pads in volts before
+wiring anything.
 
 For those, the RetroPower PCB is overkill. A single switching device across
 the button contacts, driven by one GPIO, does the whole job. Tested on
-PS3 fat, Xbox 360 Slim and PS4 Pro.
+PS3 fat, PS4 Pro, Xbox OG, Xbox 360 Slim, Wii and Wii U.
 
 | | Relay (RetroPower board) | Single device (this page) |
 |---|---|---|
@@ -30,8 +35,13 @@ the output side, optically isolated. 350 V / 130 mA, 18–25 Ω on-resistance,
 ```
 GPIO ──[470 Ω]── 1 ┌─────────┐ 4 ── button line
                    │ AQY210EH│
-GND ────────────── 2 └─────────┘ 3 ── GND (button's other contact)
+GND ────────────── 2 └─────────┘ 3 ── button's other contact
 ```
+
+Pins 3 and 4 go **across the two contacts of the button**, whatever they
+are. Usually one of them is ground; on the Wii it is a 3.3 V supply. The
+output is floating, so the PhotoMOS does exactly what the button does in
+both cases.
 
 DIP-4, **viewed from above with the moulded dot top-left**:
 

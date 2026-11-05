@@ -34,7 +34,7 @@ PhotoMOS and one resistor. It is written up in
 | [PlayStation 4 Pro](ps4-pro.md) | PhotoMOS + D1 mini | Working | Sense on a front USB VBUS, through a divider |
 | [Xbox OG](xbox-og.md) | PhotoMOS + D1 mini | Working | Standby and sense voltages depend on the board revision |
 | [Xbox 360 Slim](xbox360-slim.md) | PhotoMOS + D1 mini | Working | Tap POWERSW on the motherboard side |
-| [Wii](wii.md) | ESP-12F + PhotoMOS | Prepared, not installed | Two different 3.3 V rails — do not mix them up |
+| [Wii](wii.md) | ESP-12F + PhotoMOS | Working | **Active-high power button**: across TP112 and a 3.3 V pad, not to ground |
 | [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Working | Bare module soldered straight to the test points |
 
 Saturn and Dreamcast are also running, with the standard relay procedure
@@ -95,6 +95,14 @@ For the no-relay version, the procedure is in
   carry over.
 - **Power-off flash on the screen** (analogue video through a scaler) is
   cosmetic. A 100 ms RESET pulse reduced it.
+- **Continuity mode is not a plain wire.** The multimeter injects a small
+  current out of the red probe. A console that powers on with red on the
+  button line and black on ground may be reacting to that voltage, not to a
+  short. Swap the probes, or use a plain wire, before concluding. This hid
+  the Wii's active-high button for an evening.
+- **Not every button pulls to ground.** Measure both pads of the button in
+  volts with the console in standby. If the "ground" side reads 3.3 V, the
+  PhotoMOS goes across the two pads, not to ground. See [Wii](wii.md).
 - **Probing a live console:** a slipping probe can trip the brick's
   protection. Probe the ground first, then the test point, and do not slide.
 - **Never plug the ESP's USB in while the console is powering it.** On the

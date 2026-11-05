@@ -1,0 +1,187 @@
+# =============================================================
+# RetroPower — Wii on a bare ESP-12F module, with a PhotoMOS AQY210EH
+#
+# Status: validated. Works from Home Assistant and from the console's own
+# power button.
+#
+# The module is an ESP-12F desoldered from a LoLin V3 / NodeMCU board.
+# Desoldering it removes everything the dev board provided: the 3.3 V
+# regulator, the boot resistors and the decoupling. They have to be
+# recreated. On a bare module there are no D0-D8 labels: the pads carry
+# the GPIO numbers directly.
+#
+# Flash over USB while the module is still on its dev board, validate OTA,
+# THEN desolder it. The firmware stays in flash.
+#
+# ---------------------------------------------------------------
+# POWER — 3.3 V ONLY on VCC. The bare module has no regulator.
+#
+#   VCC -> TP204   always-on 3.3 V
+#   GND -> a GND pad of the console
+#
+# !! Not TP110. It is also an always-on 3.3 V, but it cannot supply the
+# module: with the ESP on it, the console lost its video output and the
+# ESP did not start.
+#
+# Boot resistors:
+#   EN     -> 10 kR to 3.3 V   MANDATORY, the chip stays dead without it
+#   GPIO15 -> 10 kR to GND     MANDATORY
+#   GPIO0  -> 10 kR to 3.3 V   recommended
+#   GPIO2  -> 10 kR to 3.3 V   recommended
+#   RST    -> 10 kR to 3.3 V   recommended
+#
+# Decoupling: 100 nF between VCC and GND, as close to the module as
+# possible.
+#
+# ---------------------------------------------------------------
+# POWER BUTTON — via the PhotoMOS AQY210EH
+#
+# !! The Wii's power button is ACTIVE HIGH, unlike every other console in
+# this project. TP112 sits at 0 V at rest, and the button connects it to
+# a 3.3 V standby pad. Pulling TP112 to ground does nothing.
+#
+#   pin 1 <- 470 R <- GPIO4
+#   pin 2 -> GND (the module's ground)
+#   pin 3 -> the button's OTHER pad: 3.3 V standby. It looks like an
+#            isolated ground (it does not beep with ground in continuity
+#            mode) — it is not. Measure it: ~3.3 V console in standby.
+#   pin 4 -> TP112, the power button line (~0 V at rest)
+#
+# The PhotoMOS output is a floating contact, so it simply joins the two
+# button pads, exactly like the button.
+#
+# Do NOT use TP117: it is on the processor side of the button. Touching it
+# even with a multimeter probe switches the running console off, but it
+# can never switch it on — in standby nothing is listening on that line.
+#
+# ---------------------------------------------------------------
+# SENSE — GPIO14
+#
+# The pad silkscreened "3.3V" on side A, just above R113, with a pad
+# silkscreened "GND" right above it (next to TP197 and C247). It is the
+# main 3.3 V rail: 0 V in standby, 3.3 V running. No divider needed.
+#
+# Check it in BOTH standby modes: red LED (WiiConnect24 off) and orange
+# LED (WiiConnect24 on). Simplest is to switch WiiConnect24 off.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-wii"
+  friendly_name: "Wii Power"
+  press_on_ms: "300"       # short press: powers on
+  press_off_ms: "300"      # short press: powers off (standby)
+  press_force_ms: "5000"   # hold: forced shutdown
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # At boot, make sure the button is released.
+  on_boot:
+    priority: -100
+    then:
+      - output.turn_off: button_pin
+
+esp8266:
+  board: nodemcuv2         # 4 MB ESP8266 — still correct for the bare module
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20dB
+  # Static IP: use a DIFFERENT address for each board/console!
+  manual_ip:
+    static_ip: 192.168.2.243
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# GPIO4: high = the PhotoMOS LED is lit = power button pressed
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: button_pin
+
+binary_sensor:
+  - platform: gpio
+    id: power_sense
+    name: "${friendly_name} - Console on (sensor)"
+    pin:
+      number: GPIO14       # the "3.3V" pad, main rail. Already 3.3 V.
+      mode: INPUT
+    filters:
+      - delayed_on_off: 50ms
+
+script:
+  # Simulates a press of "hold_ms" milliseconds on the power button.
+  - id: press_button
+    mode: single
+    parameters:
+      hold_ms: int
+    then:
+      - output.turn_on: button_pin
+      - delay: !lambda 'return hold_ms;'
+      - output.turn_off: button_pin
+
+# The switch follows POWER_SENSE. We only press if the console is not
+# already in the requested state.
+switch:
+  - platform: template
+    name: "${friendly_name}"
+    id: console_power
+    optimistic: false
+    lambda: |-
+      return id(power_sense).state;
+    turn_on_action:
+      - if:
+          condition:
+            binary_sensor.is_off: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_on_ms}
+    turn_off_action:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_off_ms}
+
+button:
+  # Short press whatever the state — handy if the sense is wrong.
+  - platform: template
+    name: "${friendly_name} - Short press"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_on_ms}
+
+  # Hold: forced shutdown, without checking the sense.
+  # Careful: if the console is really off, this turns it ON.
+  - platform: template
+    name: "${friendly_name} - Forced shutdown"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_force_ms}
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:
