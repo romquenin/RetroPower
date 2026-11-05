@@ -97,6 +97,7 @@ ESPHome configs, in `firmware/`. Duplicate the template that matches your build 
 | `retropower_ps2.yaml` | PS2 fat — relay, momentary button |
 | `retropower_ps4.yaml` | PS4 Pro — PhotoMOS, no relay |
 | `retropower_xbox_og.yaml` | Xbox OG — PhotoMOS, no relay |
+| `retropower_wiiu.yaml` | Wii U — bare ESP-12F + PhotoMOS, no relay |
 
 Pinout on the **ESP32-C3** board:
 

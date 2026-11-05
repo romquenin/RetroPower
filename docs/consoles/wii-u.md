@@ -1,51 +1,75 @@
 # Wii U
 
-Status: **prepared, not installed yet.** Module built and validated on the
-bench (62 mA at 3.3 V, OTA tested, visible in Home Assistant); nothing
-soldered inside the console. The test points below come from WiiUBrew and
-still need to be confirmed with a multimeter.
+Status: **working**, from Home Assistant and from the console's own power
+button. Everything soldered straight to the motherboard test points, first
+attempt.
 
-Planned build: **bare ESP-12F + PhotoMOS AQY210EH**, no relay. See
+Build: **bare ESP-12F + PhotoMOS AQY210EH**, no relay. See
 [soft-power-buttons.md](../soft-power-buttons.md).
 
-## Test points
+## The three points actually used
+
+| Role | Point | Goes to |
+|---|---|---|
+| Always-on 3.3 V | **TP22** | the module's `VCC` |
+| Ground | **TP164** | the module's `GND` |
+| Power switch | **TP70** | PhotoMOS pins 3/4, with ground |
+| Sense | a round plated pad, see below | **GPIO14** |
+
+WiiUBrew documents **TP122** as the always-on 3.3 V rail and **TP114** as
+the drive's always-on 3.3 V. TP22 is what was measured and used here.
+Measure your own board rather than trusting either list blindly.
+
+### The sense point
+
+The pad used is the **round plated pad** highlighted in BitBuilt's Wii U
+voltage map, inside the 3.3 V zone next to **TP142 / TP161**: C406 sits
+above it, C1453 below and to its right, Q1077 and R1300 lower-left. It
+carries no `TPxxx` designation on that map. 3.3 V straight into GPIO14, no
+divider.
+
+Check the sense in **every** state, connected standby included — the Wii U
+stays on the network for downloads and to charge the GamePad, and the point
+must fall back to 0 V there.
+
+**Avoid TP139**, the Wi-Fi module's supply: its enable line (TP141) comes
+from the RTC, so it can stay alive in standby.
+
+## Bare module
+
+The module is an ESP-12F desoldered from a LoLin / NodeMCU dev board. On a
+bare module there are **no `D0`–`D8` silkscreen labels** — the pads carry the
+GPIO numbers directly, so there is no translation to do: `GPIO4` for the
+PhotoMOS, `GPIO14` for the sense.
+
+Boot resistors, which are what the dev board was providing for you:
+
+| Pad | To | |
+|---|---|---|
+| `EN` | 10 kΩ → 3.3 V | **mandatory**, the chip stays dead without it |
+| `GPIO15` | 10 kΩ → GND | **mandatory** |
+| `GPIO0` | 10 kΩ → 3.3 V | recommended |
+| `GPIO2` | 10 kΩ → 3.3 V | recommended |
+| `RST` | 10 kΩ → 3.3 V | recommended |
+
+100 nF between VCC and GND as close to the module as possible. Add an
+electrolytic (100 µF or more) if Uptime keeps resetting itself. The module
+draws about 62 mA at 3.3 V, roughly 0.2 W.
+
+**Flash and validate OTA before desoldering the module from its dev board** —
+afterwards there is no USB left.
+
+On some older ESP-12 modules the **GPIO4 and GPIO5 silkscreen is swapped**
+relative to the actual chip pins. The check is free while the module is
+still on its dev board: flash it, trigger the short press from Home
+Assistant, and see which pad goes to 3.3 V.
+
+## Where the test points are
 
 Unlike most consoles, the Wii U's test points are **silkscreened on the
 board itself** — look for `TPxxx` next to the pads. They are mostly on the
-**underside, opposite the SoC**, so a magnifier is enough to find them, no
-reference photo needed.
+**underside, opposite the SoC**, so a magnifier is enough to find them.
 
-### Always on — to power the module
-
-| Point | Description |
-|---|---|
-| **TP122** | 3.3 V always-on power rail |
-| **TP114** | 3.3 V always-on rail of the disc drive |
-| **TP164** | reference ground of the always-on 3.3 V |
-
-TP122 with TP164 as ground is the pair to use for VCC / GND.
-
-### Switched 3.3 V — candidates for the sense
-
-WiiUBrew does not label these as on-only, so **measure before soldering**.
-Ranked by how likely they are:
-
-| Point | Description | Why |
-|---|---|---|
-| **TP142** | 3.3 V supply of the HDMI encoder | video only runs when the console does — first choice |
-| **TP2** | 3.3 V of the disc drive | TP114 is the always-on version of the same subsystem, which suggests TP2 is the switched one |
-| **TP138** | 3.3 V rail B (ground reference TP137) | |
-| **TP168** | 3.3 V rail C (ground reference TP169) | |
-| **TP132** | 3.3 V / 12 V power-good signal | literally a "console is powered" signal — worth exploring |
-
-**Avoid TP139**, the Wi-Fi module supply: its enable line (TP141) comes from
-the RTC, so it can stay alive in standby.
-
-Check the sense in **every** state, including connected standby — the Wii U
-stays on the network for downloads and to charge the GamePad.
-
-One more point with a documented location, if you come across it: **TP148**
-connects to the RTC, to the gate of Q1093 and to pin 13 of U1041.
-
-Source:
-[Hardware/Testpoints — WiiUBrew](https://wiiubrew.org/wiki/Hardware/Testpoints).
+Sources:
+[Hardware/Testpoints — WiiUBrew](https://wiiubrew.org/wiki/Hardware/Testpoints),
+and BitBuilt's Wii U motherboard voltage map.

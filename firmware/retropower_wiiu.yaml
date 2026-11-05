@@ -1,0 +1,185 @@
+# =============================================================
+# RetroPower — Wii U on a bare ESP-12F module, with a PhotoMOS AQY210EH
+#
+# Status: validated. Works from Home Assistant and from the console's own
+# power button. Soldered straight to the motherboard test points.
+#
+# The module is an ESP-12F desoldered from a dev board (LoLin / NodeMCU).
+# On a bare module there are no D0-D8 silkscreen labels: the pads carry
+# the GPIO numbers directly, so solder them as written here.
+#
+# ---------------------------------------------------------------
+# POWER — 3.3 V ONLY on VCC. The bare module has no regulator.
+#
+#   VCC -> TP22    always-on 3.3 V, measured on this console
+#   GND -> TP164   ground reference of the always-on 3.3 V
+#
+# Note: WiiUBrew documents TP122 as the always-on 3.3 V rail, and TP114
+# as the drive's always-on 3.3 V. TP22 is what was measured and used
+# here — check your own board rather than trusting either blindly.
+#
+# Decoupling: 100 nF between VCC and GND, as close to the module as
+# possible. Add an electrolytic (100 µF or more) if Uptime keeps
+# resetting itself.
+#
+# ---------------------------------------------------------------
+# BOOT RESISTORS — on a bare module these are not optional
+#
+#   EN     -> 10 kR to 3.3 V   MANDATORY, the chip stays dead without it
+#   GPIO15 -> 10 kR to GND     MANDATORY
+#   GPIO0  -> 10 kR to 3.3 V   recommended
+#   GPIO2  -> 10 kR to 3.3 V   recommended
+#   RST    -> 10 kR to 3.3 V   recommended
+#
+# ---------------------------------------------------------------
+# POWER BUTTON — via the PhotoMOS AQY210EH
+#
+#   pin 1 <- 470 R <- GPIO4
+#   pin 2 -> GND
+#   pins 3 and 4 -> TP70 (the power switch line) and ground, either way
+#                   round. The PhotoMOS output is a floating contact, so
+#                   polarity does not matter.
+#
+# ---------------------------------------------------------------
+# SENSE — GPIO14, 3.3 V present ONLY when the console is running
+#
+# The point used here is the round plated pad highlighted on BitBuilt's
+# Wii U voltage map, in the 3.3 V zone next to TP142 / TP161: between
+# C406 above it and C1453 below-right, with Q1077 and R1300 lower-left.
+# It carries no TP designation on that map. 3.3 V straight in, no divider.
+#
+# Check the sense in EVERY state, connected standby included — the Wii U
+# stays on the network for downloads and to charge the GamePad, and it
+# must fall back to 0 V there.
+#
+# Avoid TP139, the Wi-Fi module's supply: its enable line comes from the
+# RTC (TP141), so it can stay alive in standby.
+#
+# ---------------------------------------------------------------
+# Flash and validate OTA BEFORE desoldering the module from its dev
+# board — afterwards there is no USB left.
+#
+# The test points are silkscreened on the underside of the board,
+# opposite the SoC.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-wiiu"
+  friendly_name: "Wii U Power"
+  press_on_ms: "300"       # short press: powers on
+  press_off_ms: "300"      # short press: powers off
+  press_force_ms: "5000"   # hold: forced shutdown
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  # At boot, make sure the button is released.
+  on_boot:
+    priority: -100
+    then:
+      - output.turn_off: button_pin
+
+esp8266:
+  board: nodemcuv2         # 4 MB ESP8266 — still correct for the bare module
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 14dB       # lowers the current peaks on a standby rail
+  # Static IP: use a DIFFERENT address for each board/console!
+  manual_ip:
+    static_ip: 192.168.2.244
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+# GPIO4: high = the PhotoMOS LED is lit = power button pressed
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: button_pin
+
+binary_sensor:
+  - platform: gpio
+    id: power_sense
+    name: "${friendly_name} - Console on (sensor)"
+    pin:
+      number: GPIO14       # 3.3 V straight in, no divider
+      mode: INPUT
+    filters:
+      - delayed_on_off: 50ms
+
+script:
+  # Simulates a press of "hold_ms" milliseconds on the power button.
+  - id: press_button
+    mode: single
+    parameters:
+      hold_ms: int
+    then:
+      - output.turn_on: button_pin
+      - delay: !lambda 'return hold_ms;'
+      - output.turn_off: button_pin
+
+# The switch follows POWER_SENSE. We only press if the console is not
+# already in the requested state.
+switch:
+  - platform: template
+    name: "${friendly_name}"
+    id: console_power
+    optimistic: false
+    lambda: |-
+      return id(power_sense).state;
+    turn_on_action:
+      - if:
+          condition:
+            binary_sensor.is_off: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_on_ms}
+    turn_off_action:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sense
+          then:
+            - script.execute:
+                id: press_button
+                hold_ms: ${press_off_ms}
+
+button:
+  # Short press whatever the state — handy if the sense is wrong.
+  - platform: template
+    name: "${friendly_name} - Short press"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_on_ms}
+
+  # Hold: forced shutdown, without checking the sense.
+  # Careful: if the console is really off, this turns it ON.
+  - platform: template
+    name: "${friendly_name} - Forced shutdown"
+    on_press:
+      - script.execute:
+          id: press_button
+          hold_ms: ${press_force_ms}
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:

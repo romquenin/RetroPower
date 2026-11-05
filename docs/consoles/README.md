@@ -35,7 +35,7 @@ PhotoMOS and one resistor. It is written up in
 | [Xbox OG](xbox-og.md) | PhotoMOS + D1 mini | Working | Standby and sense voltages depend on the board revision |
 | [Xbox 360 Slim](xbox360-slim.md) | PhotoMOS + D1 mini | Working | Tap POWERSW on the motherboard side |
 | [Wii](wii.md) | ESP-12F + PhotoMOS | Prepared, not installed | Two different 3.3 V rails — do not mix them up |
-| [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Prepared, not installed | Test points are silkscreened `TPxxx` on the board |
+| [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Working | Bare module soldered straight to the test points |
 
 Saturn and Dreamcast are also running, with the standard relay procedure
 below and nothing console-specific worth recording.
