@@ -9,10 +9,10 @@ button is a **logic input**: a touch pad or a micro-switch whose only job is
 to change the level of one line so the console's management controller sees
 a press. That line carries microamps.
 
-Almost always the button pulls that line **to ground**. Not always: on the
-**Wii** it brings a 3.3 V standby supply onto a line that sits at 0 V. See
-[the Wii notes](consoles/wii.md). Measure both button pads in volts before
-wiring anything.
+The button pulls that line low, but its return is not always the board
+ground you would pick: on the **Wii** it is a separate pad (TP112) that does
+not even beep with ground. See [the Wii notes](consoles/wii.md). Measure both
+button pads in volts before wiring anything, and wire **across the button**.
 
 For those, the RetroPower PCB is overkill. A single switching device across
 the button contacts, driven by one GPIO, does the whole job. Tested on
@@ -39,7 +39,7 @@ GND ────────────── 2 └─────────�
 ```
 
 Pins 3 and 4 go **across the two contacts of the button**, whatever they
-are. Usually one of them is ground; on the Wii it is a 3.3 V supply. The
+are — not from the line to the nearest ground. The
 output is floating, so the PhotoMOS does exactly what the button does in
 both cases.
 

@@ -1,0 +1,127 @@
+# =============================================================
+# RetroPower - Mega Drive (ESP32-C3-Zero, relay board)
+# Generic template + a Reset button in Home Assistant.
+#
+#   GPIO0  = POWER_SENSE  (console 3V3 rail, high = on)
+#   GPIO3  = RELAY_SET    (pulse -> on, via Q1)
+#   GPIO10 = RELAY_RESET  (pulse -> off, via Q2)
+#   GPIO20 = console RESET: 470 ohm -> PhotoMOS AQY210EH pin 1,
+#            PhotoMOS pins 3/4 across the console's Reset button.
+#            Not GP5 (next to the antenna: Wi-Fi drops), not GP4 (next to
+#            GP3), not GP21 (outputs data at boot). See
+#            docs/consoles/mega-drive.md.
+#
+# After an OTA update, leave the board powered for 2 minutes: ESPHome
+# rolls back to the previous firmware if the new one has not run for 60 s.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-md"
+  friendly_name: "Megadrive Power"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  # keeps the radio awake: fewer drops when the signal is marginal
+  power_save_mode: none
+  manual_ip:
+    static_ip: 192.168.2.234   # unique per console
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+output:
+  - platform: gpio
+    pin: GPIO3
+    id: relay_set_pin
+  - platform: gpio
+    pin: GPIO10
+    id: relay_reset_pin
+  - platform: gpio
+    pin: GPIO20
+    id: console_reset_pin
+
+binary_sensor:
+  - platform: gpio
+    id: power_sense
+    name: "${friendly_name} - Console on (sensor)"
+    pin:
+      number: GPIO0
+      mode: INPUT
+    filters:
+      - delayed_on_off: 50ms
+
+script:
+  - id: pulse_set
+    then:
+      - output.turn_on: relay_set_pin
+      - delay: 100ms
+      - output.turn_off: relay_set_pin
+  - id: pulse_reset
+    then:
+      - output.turn_on: relay_reset_pin
+      - delay: 100ms
+      - output.turn_off: relay_reset_pin
+  # 200 ms press on the console's Reset button
+  - id: press_console_reset
+    mode: single
+    then:
+      - output.turn_on: console_reset_pin
+      - delay: 200ms
+      - output.turn_off: console_reset_pin
+
+# State always reflects reality (POWER_SENSE), even when the
+# console is switched by its physical button.
+switch:
+  - platform: template
+    name: "${friendly_name}"
+    id: console_power
+    optimistic: false
+    lambda: |-
+      return id(power_sense).state;
+    turn_on_action:
+      - script.execute: pulse_set
+    turn_off_action:
+      - script.execute: pulse_reset
+
+# Reset button in Home Assistant, ignored while the console is off
+button:
+  - platform: template
+    name: "${friendly_name} - Reset"
+    icon: "mdi:restart"
+    on_press:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sense
+          then:
+            - script.execute: press_console_reset
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:

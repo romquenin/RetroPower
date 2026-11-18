@@ -24,7 +24,7 @@ PhotoMOS and one resistor. It is written up in
 |---|---|---|---|
 | [SNES](snes.md) | Relay, integrated board | Working | First board built |
 | [NES](nes.md) | Relay | Working | |
-| [Mega Drive](mega-drive.md) | Relay | Working | A Reset button is designed but not built yet |
+| [Mega Drive](mega-drive.md) | Relay | Working | **Reset button** in Home Assistant, through a PhotoMOS on GP20 |
 | [Master System](master-system.md) | Relay, integrated board | Working | **ESP32-C3-Zero swapped for a D1 mini** on an assembled board |
 | [Nintendo 64](n64.md) | Relay | Working | **Two circuits to close (12 V + 3.3 V)** |
 | [GameCube](gamecube.md) | Relay, compact board | Working | Switch = small PCB button |
@@ -34,7 +34,7 @@ PhotoMOS and one resistor. It is written up in
 | [PlayStation 4 Pro](ps4-pro.md) | PhotoMOS + D1 mini | Working | Sense on a front USB VBUS, through a divider |
 | [Xbox OG](xbox-og.md) | PhotoMOS + D1 mini | Working | Standby and sense voltages depend on the board revision |
 | [Xbox 360 Slim](xbox360-slim.md) | PhotoMOS + D1 mini | Working | Tap POWERSW on the motherboard side |
-| [Wii](wii.md) | ESP-12F + PhotoMOS | Working | **Active-high power button**: across TP112 and a 3.3 V pad, not to ground |
+| [Wii](wii.md) | ESP-12F + PhotoMOS | Working | PhotoMOS **across the button**: TP112 is its ground side. USB disk crash fixed by the [USB disk switch](../../projects/usb-switch-wifi/README.md) |
 | [Wii U](wii-u.md) | ESP-12F + PhotoMOS | Working | Bare module soldered straight to the test points |
 
 Saturn and Dreamcast are also running, with the standard relay procedure
@@ -96,13 +96,22 @@ For the no-relay version, the procedure is in
 - **Power-off flash on the screen** (analogue video through a scaler) is
   cosmetic. A 100 ms RESET pulse reduced it.
 - **Continuity mode is not a plain wire.** The multimeter injects a small
-  current out of the red probe. A console that powers on with red on the
-  button line and black on ground may be reacting to that voltage, not to a
-  short. Swap the probes, or use a plain wire, before concluding. This hid
-  the Wii's active-high button for an evening.
-- **Not every button pulls to ground.** Measure both pads of the button in
-  volts with the console in standby. If the "ground" side reads 3.3 V, the
-  PhotoMOS goes across the two pads, not to ground. See [Wii](wii.md).
+  current out of the red probe. A console that reacts when you touch two
+  pads with it may be reacting to that voltage, not to a short. Confirm
+  with a plain wire before concluding.
+- **Wire the PhotoMOS across the two contacts of the button**, never from
+  the line to the nearest ground. On the Wii, the button's ground side is a
+  separate pad (TP112) that does not beep with ground; wiring the line's
+  neighbour to the console ground joined ground to ground and did nothing
+  for an evening. See [Wii](wii.md).
+- **Keep wires away from the ESP's antenna.** On the Mega Drive, a wire
+  soldered on GP5 — the pin right next to the ESP32-C3-Zero's antenna —
+  made a rock-solid console drop off Wi-Fi. Moving it to GP20, at the
+  USB-C end, fixed it.
+- **After an OTA update, leave the board powered for 2 minutes.** ESPHome
+  on ESP32 rolls back to the previous firmware if the new one has not run
+  for 60 s before a power cut: unplug too early and your new entities
+  vanish after the next power-up.
 - **Probing a live console:** a slipping probe can trip the brick's
   protection. Probe the ground first, then the test point, and do not slide.
 - **Never plug the ESP's USB in while the console is powering it.** On the

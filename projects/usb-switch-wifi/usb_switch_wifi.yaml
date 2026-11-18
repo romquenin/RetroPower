@@ -1,0 +1,187 @@
+# =============================================================
+# RetroPower USB Switch — D1 mini
+#
+# Sends one 2.5" USB disk (Y cable: A = data + 5 V, B = 5 V only) to
+#   console 1 = ports A1 / B1 = Wii U  (default position: the disk lives here)
+#   console 2 = ports A2 / B2 = Wii    (gets the disk only while it is ON)
+#
+#   K1 switches D+ and D-, K2 switches the two 5 V lines.
+#   Both relays are bistable and move together:
+#     D2 (GPIO4) -> RESET coils -> console 1 (Wii U)
+#     D1 (GPIO5) -> SET coils   -> console 2 (Wii)
+#   100 ms pulses. The relays keep their position without power.
+#
+# AUTOMATIC MODE (in this firmware, no Home Assistant automation needed):
+#   - the Wii turns on  -> the disk goes to the Wii;
+#   - the Wii turns off -> the disk goes back to the Wii U.
+#   So the Wii is completely cut off from the disk while it is in standby.
+#   The Wii's power state comes from its RetroPower sensor, read through
+#   Home Assistant: if Home Assistant is down, the automatic mode pauses.
+#
+# SAFETY: the disk is never taken away from a console that is ON
+# (unplugging USB in the middle of a write can corrupt it).
+#
+# The relays cannot report their position. The firmware remembers the last
+# choice in flash and, at boot, sends one pulse to that same position: the
+# relays are already there, nothing moves, but firmware and relays agree.
+# =============================================================
+
+substitutions:
+  device_name: "retropower-usb-switch"
+  friendly_name: "USB Disk"
+  console1_name: "Wii U"
+  console2_name: "Wii"
+  # RetroPower "Console on (sensor)" entities, copied from Home Assistant
+  # (Settings > Entities > search the console > entity ID)
+  console1_sensor: "binary_sensor.wii_u_power_console_on_sensor"
+  console2_sensor: "binary_sensor.wii_power_console_on_sensor"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  on_boot:
+    priority: -100
+    then:
+      - delay: 2s
+      - if:
+          condition:
+            lambda: 'return id(target) == 2;'
+          then:
+            - script.execute: pulse_console2
+          else:
+            - script.execute: pulse_console1
+
+esp8266:
+  board: d1_mini
+  restore_from_flash: true     # keeps "target" across reboots
+
+preferences:
+  flash_write_interval: 5s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20dB
+  # Static IP: use a DIFFERENT address for each board!
+  manual_ip:
+    static_ip: 192.168.2.246
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+api:
+
+ota:
+  - platform: esphome
+
+logger:
+
+globals:
+  - id: target          # 1 = console 1 (Wii U), 2 = console 2 (Wii)
+    type: int
+    restore_value: true
+    initial_value: '1'
+
+output:
+  - platform: gpio
+    pin: GPIO4          # D2 -> Q2 -> RESET coils -> console 1
+    id: reset_pin
+  - platform: gpio
+    pin: GPIO5          # D1 -> Q1 -> SET coils -> console 2
+    id: set_pin
+
+binary_sensor:
+  - platform: homeassistant
+    id: c1_on
+    entity_id: ${console1_sensor}
+    internal: true
+  - platform: homeassistant
+    id: c2_on
+    entity_id: ${console2_sensor}
+    internal: true
+    # automatic mode: the disk follows the Wii
+    on_press:
+      - script.execute:
+          id: select_console
+          want: 2
+    on_release:
+      - script.execute:
+          id: select_console
+          want: 1
+
+script:
+  - id: pulse_console1
+    mode: single
+    then:
+      - output.turn_off: set_pin
+      - output.turn_on: reset_pin
+      - delay: 100ms
+      - output.turn_off: reset_pin
+  - id: pulse_console2
+    mode: single
+    then:
+      - output.turn_off: reset_pin
+      - output.turn_on: set_pin
+      - delay: 100ms
+      - output.turn_off: set_pin
+
+  # The only place that moves the relays. Refuses to take the disk away
+  # from a console that is ON.
+  - id: select_console
+    mode: queued
+    parameters:
+      want: int
+    then:
+      - lambda: |-
+          if (want == id(target)) return;
+          auto *now = (id(target) == 1) ? id(c1_on) : id(c2_on);
+          if (now->has_state() && now->state) {
+            ESP_LOGW("usb_switch", "Refused: console %d is ON and may be using the disk", id(target));
+            return;
+          }
+          id(target) = want;
+          if (want == 2) id(pulse_console2).execute();
+          else           id(pulse_console1).execute();
+          ESP_LOGI("usb_switch", "Disk -> console %d", want);
+
+select:
+  - platform: template
+    name: "${friendly_name}"
+    id: disk_select
+    options:
+      - "${console1_name}"
+      - "${console2_name}"
+    update_interval: 1s
+    lambda: |-
+      return id(target) == 2 ? std::string("${console2_name}") : std::string("${console1_name}");
+    set_action:
+      - script.execute:
+          id: select_console
+          want: !lambda 'return x == "${console2_name}" ? 2 : 1;'
+
+button:
+  # Re-sends a pulse to the remembered position, without changing it.
+  - platform: template
+    name: "${friendly_name} - Resync relays"
+    entity_category: config
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(target) == 2;'
+          then:
+            - script.execute: pulse_console2
+          else:
+            - script.execute: pulse_console1
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} - WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} - Uptime"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "${friendly_name} - Reset reason"
+
+debug:

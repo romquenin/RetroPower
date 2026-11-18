@@ -95,6 +95,7 @@ ESPHome configs, in `firmware/`. Duplicate the template that matches your build 
 | `retropower_template.yaml` | Relay board + ESP32-C3-Zero (validated on a SNES) |
 | `retropower_template_esp8266.yaml` | Relay board + D1 mini (validated on a Master System) |
 | `retropower_ps2.yaml` | PS2 fat — relay, momentary button |
+| `retropower_megadrive.yaml` | Mega Drive — relay + Reset button (PhotoMOS on GP20) |
 | `retropower_ps4.yaml` | PS4 Pro — PhotoMOS, no relay |
 | `retropower_xbox_og.yaml` | Xbox OG — PhotoMOS, no relay |
 | `retropower_wii.yaml` | Wii — bare ESP-12F + PhotoMOS, no relay |
@@ -123,6 +124,7 @@ Measurements, wiring and lessons learned for each console tested so far are in [
 ## Related projects
 
 - [`projects/toslink-switch-wifi/`](projects/toslink-switch-wifi/README.md) — Wi-Fi control of a CSL 41811 Toslink audio switch (ESPHome on a D1 mini, MOSFET on the IR-jack signal line), so the audio input follows the console that is running.
+- [`projects/usb-switch-wifi/`](projects/usb-switch-wifi/README.md) — Wi-Fi USB disk switch: one 2.5" Y-cable disk shared between two consoles (here a Wii U and a Wii) through two bistable relays on a D1 mini board, with a 3D-printable enclosure. The disk follows the Wii automatically and is never taken from a console that is on.
 
 ## Generation scripts (KiCad / Python)
 

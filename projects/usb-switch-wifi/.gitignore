@@ -1,0 +1,4 @@
+hardware/build/
+hardware/*_unrouted.kicad_pcb
+hardware/*.kicad_prl
+hardware/*-backups/

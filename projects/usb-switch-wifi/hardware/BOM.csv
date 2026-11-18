@@ -1,0 +1,13 @@
+Reference,Qty,Value,Footprint,Notes
+J1-J6,6,USB-A female right angle US-306,usbswitch:USB_A_US-306_Horizontal,"Generic AliExpress US-306. Footprint drawn from the seller's PCB layout: pins 7.00 / 2.00 mm, d0.92; legs 13.14 mm apart, d2.30, 1.45 mm toward the opening. Pin 1 = square pad = 5 V. BEFORE ORDERING THE PCB: check the 3 dimensions and which pin carries 5 V (see README). J1 = A (disk), J2 = B (disk), J3 = A1, J4 = B1 (console 1), J5 = A2, J6 = B2 (console 2)."
+K1,1,HFD2/003-M-L2-D,Package_DIP:DIP-16_W7.62mm,"Bistable relay, D- (pole 1) and D+ (pole 2). Same relay and pinout as RetroPower. Only 10 pins: the 6 unused DIP-16 holes are removed."
+K2,1,HFD2/003-M-L2-D,Package_DIP:DIP-16_W7.62mm,"Bistable relay, 5V_A (pole 1) and 5V_B (pole 2). Coils driven at 5 V (max 6 V for the 003 coil)."
+Q1,1,AO3400A,Package_TO_SOT_SMD:SOT-23,"Drives both SET coils (console 2). Under the D1 mini."
+Q2,1,AO3400A,Package_TO_SOT_SMD:SOT-23,"Drives both RESET coils (console 1). Under the D1 mini."
+D1-D4,4,1N4148WS,Diode_SMD:D_SOD-123,"Flyback diodes, one per coil. Mount AS PRINTED: silkscreen bar = cathode = +5V side (no 180 deg trick, unlike RetroPower D1/D2). Under the D1 mini."
+R1-R2,2,100R,Resistor_SMD:R_0805_2012Metric,"Gate series resistors. Under the D1 mini."
+R3-R4,2,10k,Resistor_SMD:R_0805_2012Metric,"Gate pull-downs. Under the D1 mini."
+C1,1,100uF/16V,Capacitor_SMD:CP_Elec_6.3x5.4,"Reservoir for the coil pulses (two coils at once, ~220 mA). '+' marked on the silkscreen."
+C2,1,100nF,Capacitor_SMD:C_0805_2012Metric,"5 V decoupling. Under the D1 mini."
+U1,1,WEMOS D1 mini + 2 x 1x8 male headers,Module:WEMOS_D1_mini_light,"Soldered on its male headers, LAST, after the SMD parts below it. Only 5V, G, D1, D2 are wired; the other row is for mechanics. Antenna end toward the inside, micro-USB on the board edge."
+H1-H2,2,M2.5 mounting hole,MountingHole:MountingHole_2.7mm_M2.5,"Enclosure: M2.5 x 20 mm screw from the lid, nut trapped under the base."

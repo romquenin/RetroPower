@@ -16,7 +16,8 @@
 # ---------------------------------------------------------------
 # POWER — 3.3 V ONLY on VCC. The bare module has no regulator.
 #
-#   VCC -> TP204   always-on 3.3 V
+#   VCC -> buck set to 3.3 V, fed from the 12 V input (Vin+ / Vin-)
+#          (TP204, always-on 3.3 V, also works)
 #   GND -> a GND pad of the console
 #
 # !! Not TP110. It is also an always-on 3.3 V, but it cannot supply the
@@ -36,16 +37,14 @@
 # ---------------------------------------------------------------
 # POWER BUTTON — via the PhotoMOS AQY210EH
 #
-# !! The Wii's power button is ACTIVE HIGH, unlike every other console in
-# this project. TP112 sits at 0 V at rest, and the button connects it to
-# a 3.3 V standby pad. Pulling TP112 to ground does nothing.
+# !! Put the PhotoMOS ACROSS THE TWO BUTTON PADS. TP112 (0 V) is the
+# button's ground side, not the line: wiring TP112 to the console ground
+# joins ground to ground and does nothing.
 #
 #   pin 1 <- 470 R <- GPIO4
 #   pin 2 -> GND (the module's ground)
-#   pin 3 -> the button's OTHER pad: 3.3 V standby. It looks like an
-#            isolated ground (it does not beep with ground in continuity
-#            mode) — it is not. Measure it: ~3.3 V console in standby.
-#   pin 4 -> TP112, the power button line (~0 V at rest)
+#   pin 3 -> the button's OTHER pad: the line, pulled up (~3.3 V)
+#   pin 4 -> TP112, the button's ground side (~0 V)
 #
 # The PhotoMOS output is a floating contact, so it simply joins the two
 # button pads, exactly like the button.
